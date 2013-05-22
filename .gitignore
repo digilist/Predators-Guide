@@ -15,3 +15,11 @@
 *.exe
 *.out
 *.app
+
+# IDEs
+.idea/**
+.project
+.settings
+.buildpath
+.metadata
+Predators Guide.iml
