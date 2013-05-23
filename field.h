@@ -10,7 +10,7 @@ struct PlayingField {
 	int width;
 	int height;
 
-	struct Field **population; // Belegung der einzelnen Felder des Spielfelds
+	struct Field *population; // Belegung der einzelnen Felder des Spielfelds
 	int numberOfPredators; // Anzahl Räuber aktuell
 	int numberOfPrey; // Anzahl Beute aktuell
 };
@@ -48,7 +48,7 @@ enum Direction {
 
 void initField(int width, int height);
 
-void* getFieldContent(struct PlayingField *field, int x, int y);
+void* getField(struct PlayingField *field, int x, int y);
 
 void dumpPopulation(struct PlayingField *field);
 
