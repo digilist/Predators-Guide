@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include "field.h"
+#include "map.h"
+#include "simulation.h"
 
 
 /*
