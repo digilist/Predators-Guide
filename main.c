@@ -13,7 +13,7 @@ int main() {
 	printf("|  PREDATOR vs. PREY  |\n");
 	printf("=======================\n");
 
-	initField(3, 3);
+	initField(20, 20);
 
 	return 0;
 }

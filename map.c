@@ -21,6 +21,12 @@ void initField(int width, int height) {
 			struct Field *field = getField(map, i, j);
 
 			resetField(field);
+
+			int pop = rand() % 6;
+			if(pop > 2)
+				pop = 0; // >50% empty
+
+			field->populationType = pop; // RANDOM population Type
 		}
 	}
 
@@ -33,8 +39,9 @@ void dumpPopulation(struct Map *map) {
 	for (int i = 0; i < map->width; i++) {
 		for (int j = 0; j < map->height; j++) {
 			struct Field *field = getField(map, i, j);
-			printf("%d\n", field->populationType);
+			printf("%d", field->populationType);
 		}
+		printf("\n");
 	}
 }
 
