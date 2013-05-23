@@ -1,5 +1,5 @@
 CC = /usr/bin/gcc
-CFLAGS = -Wall -g -o predators.out *.c
+CFLAGS = -Wall -std=c99 -g -o predators.out *.c
 
 all: compile run
 
