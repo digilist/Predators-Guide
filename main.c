@@ -9,7 +9,7 @@
  */
 int main() {
 	printf("=======================\n");
-	printf("|  PREDATOR vs. PRAY  |\n");
+	printf("|  PREDATOR vs. PREY  |\n");
 	printf("=======================\n");
 
 	initField(3, 3);

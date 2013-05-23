@@ -10,17 +10,17 @@ struct PlayingField {
 	int width;
 	int height;
 
-	struct FieldContent **population; // Belegung der einzelnen Felder des Spielfelds
+	struct Field **population; // Belegung der einzelnen Felder des Spielfelds
 	int numberOfPredators; // Anzahl Räuber aktuell
-	int numberOfPreys; // Anzahl Beute aktuell
+	int numberOfPrey; // Anzahl Beute aktuell
 };
 
 /**
  * die Belegung eines Feldes
  *
  */
-struct FieldContent {
-	enum FieldPopulationType *populationType;
+struct Field {
+	enum PopulationType *populationType;
 
 	// wenn populationType == EMPTY muss keines dieser Werte gesetzt werden
 	int age; // erreicht das Lebewesen ein bestimmtes Alter, bringt es ein neues Lebewesen auf die Welt
@@ -34,7 +34,7 @@ struct FieldContent {
  * die möglichen Feldbelegungen: leeres Feld, Räuber & Beute
  *
  */
-enum FieldPopulationType {
+enum PopulationType {
 	EMPTY, PREDATOR, PREY
 };
 
@@ -43,7 +43,7 @@ enum FieldPopulationType {
  *
  */
 enum Direction {
-	TOP, BOTTOM, LEFT, RIGHT
+	UP, DOWN, LEFT, RIGHT
 };
 
 void initField(int width, int height);
