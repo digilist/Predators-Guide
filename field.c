@@ -7,7 +7,7 @@
  *
  */
 void initField(int width, int height) {
-	struct PlayingField *field = malloc(sizeof(struct PlayingField) * 1000);
+	struct PlayingField *field = malloc(sizeof(struct PlayingField));
 	field->width = width;
 	field->height = height;
 	field->numberOfPredators = 0;
@@ -17,8 +17,12 @@ void initField(int width, int height) {
 	for (int i = 0; i < field->width; i++) {
 		for (int j = 0; j < field->height; j++) {
 
-			struct FieldContent *cont = getFieldContent(field, i, j);
-			cont->age = 0;
+			struct FieldContent **cont = getFieldContent(field, i, j);
+			*cont = malloc(sizeof(struct FieldContent));
+
+			(*cont)->populationType = EMPTY;
+			(*cont)->age = 4;
+			(*cont)->starveTime = 0;
 		}
 	}
 
@@ -28,12 +32,12 @@ void initField(int width, int height) {
 }
 
 void dumpPopulation(struct PlayingField *field) {
-//	printf("%d", field->population[0][0]->age);
-//	for (int i = 0; i < field->width; i++) {
-//		for (int j = 0; j < field->height; j++) {
-//			printf("%d", field->population[i][j]->age);
-//		}
-//	}
+	for (int i = 0; i < field->width; i++) {
+		for (int j = 0; j < field->height; j++) {
+			struct FieldContent **cont = getFieldContent(field, i, j);
+			printf("%d\n", (*cont)->age);
+		}
+	}
 }
 
 /**
@@ -45,5 +49,6 @@ void simulationStep(struct PlayingField *field) {
 }
 
 void* getFieldContent(struct PlayingField *field, int x, int y) {
-	return &(*((*(field->population + x)) + y));
+	// int *addr = &(*((*(field->population + x)) + y));
+	return field->population + (x * field->width + y);
 }
