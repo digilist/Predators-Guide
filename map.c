@@ -2,12 +2,15 @@
 #include <stdlib.h>
 #include "map.h"
 #include "simulation.h"
+#include "bmp.h"
 
 /**
  * 	Initialisiert das Spielfeld mit der angebenen Breite und Höhe
  *
  */
 void initField(int width, int height) {
+	printf("Initializing a %dx%d field\n", width, height);
+
 	struct Map *map = malloc(sizeof(struct Map));
 	map->width = width;
 	map->height = height;
@@ -22,27 +25,41 @@ void initField(int width, int height) {
 
 			resetField(field);
 
-			int pop = rand() % 6;
+			int pop = rand() % 10;
 			if(pop > 2)
-				pop = 0; // >50% empty
+				pop = 0; // >80% empty
 
 			field->populationType = pop; // RANDOM population Type
 		}
 	}
 
-	printf("Initializing a %dx%d field\n", map->width, map->height);
-
-	dumpPopulation(map);
+	printToBitmap(map);
 }
 
-void dumpPopulation(struct Map *map) {
-	for (int i = 0; i < map->width; i++) {
-		for (int j = 0; j < map->height; j++) {
+void printToBitmap(struct Map *map) {
+	int width = map->width;
+	int height = map->height;
+
+	char *pixelMap;
+	pixelMap = malloc(sizeof(char) * width * height * 3);
+
+	for (int i = 0; i < width; i++) {
+		for (int j = 0; j < height; j++) {
 			struct Field *field = getField(map, i, j);
-			printf("%d", field->populationType);
+
+			int index = 3 * (j * width + i);
+			pixelMap[index] = 0; // r
+			pixelMap[index + 1] = 0; // g
+			pixelMap[index + 2] = 0; // b
+
+			if(field->populationType == PREDATOR)
+				pixelMap[index] = 255;
+			else if(field->populationType == PREY)
+				pixelMap[index + 1] = 255;
 		}
-		printf("\n");
+		write_bmp("/tmp/test.bmp", width, height, pixelMap);
 	}
+
 }
 
 void* getField(struct Map *map, int x, int y) {

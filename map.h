@@ -44,6 +44,6 @@ void* getField(struct Map *map, int x, int y);
 
 void resetField(struct Field *field);
 
-void dumpPopulation(struct Map *map);
+void printToBitmap(struct Map *map);
 
 #endif

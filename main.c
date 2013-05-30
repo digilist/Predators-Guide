@@ -13,24 +13,7 @@ int main() {
 	printf("|  PREDATOR vs. PREY  |\n");
 	printf("=======================\n");
 
-	initField(20, 20);
-
-	createBitmap();
+	initField(100, 100);
 
 	return 0;
-}
-
-void createBitmap() {
-	int width = 1000;
-	int height = 1000;
-
-	char *bmp;
-	bmp = malloc(sizeof(char) * width * height * 3);
-
-	for(int i = 0; i < width * height * 3; i++)
-	{
-		bmp[i] = rand() % 256;
-	}
-
-	write_bmp("/tmp/test.bmp", width, height, bmp);
 }
