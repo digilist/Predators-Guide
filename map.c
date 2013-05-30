@@ -8,7 +8,7 @@
  * 	Initialisiert das Spielfeld mit der angebenen Breite und Höhe
  *
  */
-void initField(int width, int height) {
+struct Map* initMap(int width, int height) {
 	printf("Initializing a %dx%d field\n", width, height);
 
 	struct Map *map = malloc(sizeof(struct Map));
@@ -33,7 +33,7 @@ void initField(int width, int height) {
 		}
 	}
 
-	printToBitmap(map);
+	return map;
 }
 
 void printToBitmap(struct Map *map) {
@@ -62,7 +62,7 @@ void printToBitmap(struct Map *map) {
 
 }
 
-void* getField(struct Map *map, int x, int y) {
+struct Field* getField(struct Map *map, int x, int y) {
 	return map->fields + (y * map->width + x);
 }
 

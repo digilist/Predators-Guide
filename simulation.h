@@ -19,4 +19,6 @@ void createChild(struct Map *map, int i, int j);
 
 int checkForPrey(struct Map *map, int i, int j);
 
+struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y, enum Direction direction);
+
 #endif

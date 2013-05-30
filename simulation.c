@@ -12,7 +12,7 @@ const int MAX_STARVE_TIME = 4;
  *
  */
 void simulationStep(struct Map *map) {
-	for(int i = 0; i< map->width; i++) {
+	for (int i = 0; i < map->width; i++) {
 		for (int j = 0; j < map->height; j++) {
 			struct Field *field = getField(map, i, j);
 
@@ -60,15 +60,48 @@ void simulationStep(struct Map *map) {
 /**
  * Tier zu einem zufälligen Nachbarfeld bewegen
  */
-void moveAnimal(struct Map *map, int i, int j) {}
+void moveAnimal(struct Map *map, int x, int y) {
+}
 
 /**
  * Ein Kind derselben Klasse auf einem zufälligen Nachbarfeld gebähren
  */
-void createChild(struct Map *map, int i, int j) {}
+void createChild(struct Map *map, int x, int y) {
+	struct Field *field = getField(map, x, y);
+
+	for(int i = 0; i < 4; i++) { // test for all possible directions
+		enum Direction direction = rand() % 4;
+
+		struct Field *neighboredField = getNeighboringFieldInDirection(map, x, y, direction);
+		if(neighboredField->populationType == EMPTY)
+		{
+			neighboredField->populationType = field->populationType;
+			break;
+		}
+	}
+}
 
 /**
  * Suche nach Beute auf Nachbarfeldern und fresse sie falls vorhanden
  */
-int checkForPrey(struct Map *map, int i, int j) { return 0; }
+int checkForPrey(struct Map *map, int i, int j) {
+	return 0;
+}
 
+struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y,
+		enum Direction direction) {
+	if (direction == UP) {
+		y += 1;
+	} else if (direction == DOWN) {
+		y -= 1;
+	} else if (direction == RIGHT) {
+		x += 1;
+	} else if (direction == LEFT) {
+		x -= 1;
+	}
+
+	x %= map->width;
+	y %= map->height;
+
+	return getField(map, x, y);
+}

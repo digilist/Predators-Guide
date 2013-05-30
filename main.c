@@ -13,7 +13,16 @@ int main() {
 	printf("|  PREDATOR vs. PREY  |\n");
 	printf("=======================\n");
 
-	initField(100, 100);
+	struct Map *map = initMap(100, 100);
+	printToBitmap(map);
+
+	int i = 0;
+	while(1)
+	{
+		simulationStep(map);
+		//printToBitmap(map);
+		printf("%d\n", i++);
+	}
 
 	return 0;
 }

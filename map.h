@@ -38,9 +38,9 @@ struct Field {
 
 };
 
-void initField(int width, int height);
+struct Map* initMap(int width, int height);
 
-void* getField(struct Map *map, int x, int y);
+struct Field* getField(struct Map *map, int x, int y);
 
 void resetField(struct Field *field);
 
