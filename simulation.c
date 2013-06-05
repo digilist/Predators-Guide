@@ -69,14 +69,20 @@ void moveAnimal(struct Map *map, int x, int y) {
 void createChild(struct Map *map, int x, int y) {
 	struct Field *field = getField(map, x, y);
 
-	for(int i = 0; i < 4; i++) { // test for all possible directions
-		enum Direction direction = rand() % 4;
-
+	int i = 0;
+	enum Direction direction = rand() % 4;
+	while(i < 4) // test for all possible directions
+	{
 		struct Field *neighboredField = getNeighboringFieldInDirection(map, x, y, direction);
 		if(neighboredField->populationType == EMPTY)
 		{
 			neighboredField->populationType = field->populationType;
 			break;
+		}
+		else
+		{
+			i++;
+			direction = (direction + 1) % 4;
 		}
 	}
 }
@@ -90,6 +96,7 @@ int checkForPrey(struct Map *map, int i, int j) {
 
 struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y,
 		enum Direction direction) {
+
 	if (direction == UP) {
 		y += 1;
 	} else if (direction == DOWN) {
@@ -99,6 +106,10 @@ struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y,
 	} else if (direction == LEFT) {
 		x -= 1;
 	}
+
+	 // only positive modulo
+	x += map->width;
+	y += map->height;
 
 	x %= map->width;
 	y %= map->height;

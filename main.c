@@ -19,9 +19,10 @@ int main() {
 	int i = 0;
 	while(1)
 	{
+		printf("Simulation Step %d\n", i++);
+
 		simulationStep(map);
 		//printToBitmap(map);
-		printf("%d\n", i++);
 	}
 
 	return 0;
