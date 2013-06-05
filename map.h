@@ -1,12 +1,12 @@
 #ifndef MAP_H_INCLUDED
 #define MAP_H_INCLUDED
 
-
 /**
  * Repräsentiert das Spielfeld
  *
  */
-struct Map {
+struct Map
+{
 	int width;
 	int height;
 
@@ -19,7 +19,8 @@ struct Map {
  * die möglichen Feldbelegungen: leeres Feld, Räuber & Beute
  *
  */
-enum PopulationType {
+enum PopulationType
+{
 	EMPTY, PREDATOR, PREY
 };
 
@@ -27,7 +28,8 @@ enum PopulationType {
  * die Belegung eines Feldes
  *
  */
-struct Field {
+struct Field
+{
 	enum PopulationType populationType;
 
 	// wenn populationType == EMPTY muss keines dieser Werte gesetzt werden
@@ -40,10 +42,12 @@ struct Field {
 
 struct Map* initMap(int width, int height);
 
+void printToBitmap(struct Map *map, char* filename);
+
 struct Field* getField(struct Map *map, int x, int y);
 
-void resetField(struct Field *field);
+void moveFieldToOtherField(struct Field *field, struct Field *neighboredField);
 
-void printToBitmap(struct Map *map);
+void resetField(struct Field *field);
 
 #endif

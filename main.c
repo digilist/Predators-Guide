@@ -8,21 +8,33 @@
  * in einem abgeschlossenen System.
  *
  */
-int main() {
+int main()
+{
 	printf("=======================\n");
 	printf("|  PREDATOR vs. PREY  |\n");
 	printf("=======================\n");
 
-	struct Map *map = initMap(100, 100);
-	printToBitmap(map);
+	system("rm -rf /tmp/pred/*");
+	system("mkdir -p /tmp/pred");
 
-	int i = 0;
-	while(1)
+	struct Map *map = initMap(100, 100);
+	printToBitmap(map, "/tmp/pred/0.bmp");
+
+	int i = 1;
+	while (1)
 	{
-		printf("Simulation Step %d\n", i++);
+		printf("Simulation Step %d\n", i);
 
 		simulationStep(map);
-		//printToBitmap(map);
+
+		char filename[256];
+		snprintf(filename, sizeof filename, "/tmp/pred/%d.bmp", i);
+
+		printToBitmap(map, filename);
+
+		i++;
+		if (i > 30)
+			break;
 	}
 
 	return 0;
