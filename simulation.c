@@ -1,17 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "config.h"
 #include "simulation.h"
 #include "map.h"
-
-const int MATURITY_AGE = 8; // Gebähralter
-const int ELDERLY_AGE = 12; // Sterbelter
-const int MAX_STARVE_TIME = 4; // max. Jahre Hunger
 
 /**
  * Simulation eines einzelnen Schrites auf dem Spielfeld
  *
  */
-void simulationStep(struct Map *map)
+void simulationStep(struct Map *map, int step)
 {
 	for (int i = 0; i < map->width; i++)
 	{
@@ -19,8 +16,9 @@ void simulationStep(struct Map *map)
 		{
 			struct Field *field = getField(map, i, j);
 
-			if (field->populationType != EMPTY)
+			if (field->populationType != EMPTY && field->lastStep < step)
 			{
+				field->lastStep++;
 				int moved = 0;
 
 				// suche nach Beute
@@ -41,10 +39,11 @@ void simulationStep(struct Map *map)
 				}
 
 				// überprüfe Alter auf Schwangerschaft
-				if (field->age > MATURITY_AGE)
+				if ((field->populationType == PREY && field->age > PREY_MATURITY_AGE) ||
+						(field->populationType == PREDATOR && field->age > PREDATOR_MATURITY_AGE))
 				{
-					// generate child
-					createChild(map, i, j);
+					if(field->populationType != PREDATOR || rand() % 2 == 0) // Jäger bringen nur mit 50% Wahrscheinlichkeit ein Kind zur Welt
+						createChild(map, i, j);
 				}
 
 				field->age++;
@@ -54,20 +53,21 @@ void simulationStep(struct Map *map)
 				{
 					resetField(field);
 				}
-
-				// Jäger ohne Beute verhungern irgendwann
-				if (field->populationType == PREDATOR)
+				else
 				{
-					if (field->starveTime > MAX_STARVE_TIME)
+					// Jäger ohne Beute verhungern irgendwann
+					if (field->populationType == PREDATOR)
 					{
-						resetField(field);
-					}
-					else
-					{
-						field->starveTime++;
+						if (field->starveTime > MAX_STARVE_TIME)
+						{
+							resetField(field);
+						}
+						else
+						{
+							field->starveTime++;
+						}
 					}
 				}
-
 			}
 		}
 	}
@@ -103,7 +103,6 @@ void createChild(struct Map *map, int x, int y)
 	if (neighboredField)
 	{
 		neighboredField->populationType = field->populationType;
-		neighboredField->populationType = PREDATOR;
 	}
 }
 
@@ -114,8 +113,6 @@ void createChild(struct Map *map, int x, int y)
  */
 struct Field* getRandomEmptyNeighboredField(struct Map *map, int x, int y)
 {
-	struct Field *field = getField(map, x, y);
-
 	enum Direction direction = rand() % 4;
 	for (int i = 0; i < 4; i++)
 	{
@@ -135,8 +132,25 @@ struct Field* getRandomEmptyNeighboredField(struct Map *map, int x, int y)
 /**
  * Suche nach Beute auf Nachbarfeldern und fresse sie falls vorhanden
  */
-int checkForPrey(struct Map *map, int i, int j)
+int checkForPrey(struct Map *map, int x, int y)
 {
+	struct Field *field = getField(map, x, y);
+
+	for(int i = 0; i < 4; i++) // test all directions
+	{
+		struct Field *neighboredField = getNeighboringFieldInDirection(map, x, y, i); // possible prey
+		if(neighboredField->populationType == PREY)
+		{
+			moveFieldToOtherField(field, neighboredField);
+			resetField(field);
+
+			// neighboredField now contains Predator
+			neighboredField->starveTime = 0;
+
+			return 1;
+		}
+	}
+
 	return 0;
 }
 

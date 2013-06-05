@@ -25,7 +25,7 @@ int main()
 	{
 		printf("Simulation Step %d\n", i);
 
-		simulationStep(map);
+		simulationStep(map, i);
 
 		char filename[256];
 		snprintf(filename, sizeof filename, "/tmp/pred/%d.bmp", i);

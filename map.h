@@ -38,6 +38,8 @@ struct Field
 	int starveTime; // Anzahl der Zeiteinheiten, die der Räuber hungern muss (nur für Räuber)
 					// nach x ZE stirbt der Räuber
 
+	int lastStep; // speichert, wann das Lebewesen seinen letzten Schritt vollzogen hat (um doppelte Schritte nach Bewegungen zu vermeiden)
+
 };
 
 struct Map* initMap(int width, int height);

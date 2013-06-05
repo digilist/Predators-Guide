@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "config.h"
 #include "map.h"
 #include "simulation.h"
 #include "bmp.h"
@@ -19,22 +20,40 @@ struct Map* initMap(int width, int height)
 	map->numberOfPrey = 0;
 	map->fields = malloc(sizeof(struct Field) * width * height);
 
+	int predatorCounter = 0;
+	int preyCounter = 0;
+	int emptyCounter = 0;
+
 	for (int i = 0; i < map->width; i++)
 	{
 		for (int j = 0; j < map->height; j++)
 		{
-
 			struct Field *field = getField(map, i, j);
-
 			resetField(field);
 
-			int pop = rand() % 10;
-			if (pop > 2)
-				pop = 0; // >80% empty
+			int pop = rand() % 100;
+			if(pop < 20)
+			{
+				pop = PREDATOR;
+				predatorCounter++;
+			}
+			else if(pop < 50)
+			{
+				pop = PREY;
+				preyCounter++;
+			}
+			else
+			{
+				pop = EMPTY;
+				emptyCounter++;
+			}
 
 			field->populationType = pop; // RANDOM population Type
+			field->age = rand() % ELDERLY_AGE; // RANDOM age
 		}
 	}
+
+	printf("Placed %d Predators, %d Prey (%d empty fields)\n", predatorCounter, preyCounter, emptyCounter);
 
 	return map;
 }
@@ -90,6 +109,7 @@ void moveFieldToOtherField(struct Field *sourceField, struct Field *targetField)
 	targetField->populationType = sourceField->populationType;
 	targetField->age = sourceField->age;
 	targetField->starveTime = sourceField->starveTime;
+	targetField->lastStep = sourceField->lastStep;
 
 	resetField(sourceField);
 }
@@ -103,5 +123,6 @@ void resetField(struct Field *field)
 	field->populationType = EMPTY;
 	field->age = 0;
 	field->starveTime = 0;
+	field->lastStep = 0;
 }
 
