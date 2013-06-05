@@ -17,7 +17,7 @@ int main()
 	system("rm -rf /tmp/pred/*");
 	system("mkdir -p /tmp/pred");
 
-	struct Map *map = initMap(100, 100);
+	struct Map *map = initMap(100, 100); // for scaling must be square
 	printToBitmap(map, "/tmp/pred/0.bmp");
 
 	int i = 1;
