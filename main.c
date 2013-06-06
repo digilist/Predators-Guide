@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "config.h"
 #include "map.h"
 #include "simulation.h"
 
@@ -14,11 +17,22 @@ int main()
 	printf("|  PREDATOR vs. PREY  |\n");
 	printf("=======================\n");
 
-	system("rm -rf /tmp/pred/*");
-	system("mkdir -p /tmp/pred");
+	char abstractBitmapFilepath[256];
+	sprintf(abstractBitmapFilepath, "%s%s", BITMAP_PATH, BITMAP_FILENAME);
 
-	struct Map *map = initMap(100, 100); // for scaling must be square
-	printToBitmap(map, "/tmp/pred/0.bmp");
+	char buffer[256];
+	char filename[256];
+
+	sprintf(buffer, "rm -rf %s*", BITMAP_PATH);
+	system(buffer);
+
+	sprintf(buffer, "mkdir -p %s", BITMAP_PATH);
+	system(buffer);
+
+	struct Map *map = initMap(MAP_WIDTH, MAP_HEIGHT); // for scaling must be square
+
+	sprintf(filename, abstractBitmapFilepath, 0);
+	printToBitmap(map, filename);
 
 	int i = 1;
 	while (1)
@@ -27,15 +41,18 @@ int main()
 
 		simulationStep(map, i);
 
-		char filename[256];
-		snprintf(filename, sizeof filename, "/tmp/pred/%d.bmp", i);
-
+		sprintf(filename, abstractBitmapFilepath, i);
 		printToBitmap(map, filename);
 
 		i++;
-		if (i > 30)
+		if (i > SIMULATION_STEPS)
 			break;
 	}
+
+	// and then
+	/*	ffmpeg -i %d.bmp -pix_fmt rgb24 output.gif && \
+		gifsicle --delay=5 --loop output.gif > pred.gif
+	 */
 
 	return 0;
 }

@@ -13,13 +13,15 @@ enum Direction {
 
 void simulationStep(struct Map *map, int i);
 
-struct Field* moveAnimal(struct Map *map, int x, int y);
+struct Field* checkForPrey(struct Map *map, struct Field *field);
 
-void createChild(struct Map *map, int x, int y);
+struct Field* moveAnimal(struct Map *map, struct Field *field);
 
-int checkForPrey(struct Map *map, int x, int y);
+void createChild(struct Map *map, struct Field *field);
 
-struct Field* getRandomEmptyNeighboredField(struct Map *map, int x, int y);
+struct Field* getRandomNeighboredField(struct Map *map, struct Field *field);
+
+struct Field* getRandomEmptyNeighboredField(struct Map *map, struct Field *field);
 
 struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y, enum Direction direction);
 

@@ -24,13 +24,18 @@ void simulationStep(struct Map *map, int step)
 				// suche nach Beute
 				if (field->populationType == PREDATOR)
 				{
-					moved = checkForPrey(map, i, j);
+					struct Field *targetField = checkForPrey(map, field);
+					if(targetField)
+					{
+						field = targetField;
+						moved = 1;
+					}
 				}
 
 				// Bewegung
 				if (!moved)
 				{
-					struct Field *targetField = moveAnimal(map, i, j);
+					struct Field *targetField = moveAnimal(map, field);
 					if (targetField)
 					{
 						field = targetField;
@@ -39,14 +44,13 @@ void simulationStep(struct Map *map, int step)
 				}
 
 				// überprüfe Alter auf Schwangerschaft
-				if ((field->populationType == PREY && field->age > PREY_MATURITY_AGE) ||
-						(field->populationType == PREDATOR && field->age > PREDATOR_MATURITY_AGE))
+				if (field->age >= MATURITY_AGE)
 				{
-					if(field->populationType != PREDATOR || rand() % 2 == 0) // Jäger bringen nur mit 50% Wahrscheinlichkeit ein Kind zur Welt
-						createChild(map, i, j);
-				}
+					//if(field->populationType != PREDATOR || rand() % 2 == 0) // Jäger bringen nur mit 25% Wahrscheinlichkeit ein Kind zur Welt
 
-				field->age++;
+					if(rand() % 3 == 0) // nurin 33% der Fälle ein Kind zur Welt bringen
+						createChild(map, field);
+				}
 
 				// wenn das Tier zu alt ist, stirbt es
 				if (field->age > ELDERLY_AGE)
@@ -68,20 +72,47 @@ void simulationStep(struct Map *map, int step)
 						}
 					}
 				}
+
+				if(field->populationType != EMPTY) // if not reset
+					field->age++;
 			}
 		}
 	}
 }
 
 /**
+ * Suche nach Beute auf Nachbarfeldern und fresse sie falls vorhanden,
+ * dabei geht er auf das Feld der Beute und hat seine Bewegung beendet
+ *
+ * gibt die Adresse des neuen Feldes zurück, wenn es keine bedeute findet die 0
+ */
+struct Field* checkForPrey(struct Map *map, struct Field *field)
+{
+	for(int i = 0; i < 4; i++) // test all directions
+	{
+		struct Field *neighboredField = getNeighboringFieldInDirection(map, field->x, field->y, i); // possible prey
+		if(neighboredField->populationType == PREY)
+		{
+			moveFieldToOtherField(field, neighboredField);
+			resetField(field);
+
+			// neighboredField now contains Predator
+			neighboredField->starveTime = 0;
+
+			return neighboredField;
+		}
+	}
+
+	return 0;
+}
+/**
  * Tier zu einem zufälligen Nachbarfeld bewegen
  *
  * hat sich das Tier bewegt wird das neue Feld zurückgegeben, andernfalls 0
  */
-struct Field* moveAnimal(struct Map *map, int x, int y)
+struct Field* moveAnimal(struct Map *map, struct Field *field)
 {
-	struct Field *field = getField(map, x, y);
-	struct Field *neighboredField = getRandomEmptyNeighboredField(map, x, y);
+	struct Field *neighboredField = getRandomEmptyNeighboredField(map, field);
 
 	if (neighboredField)
 	{
@@ -95,11 +126,9 @@ struct Field* moveAnimal(struct Map *map, int x, int y)
 /**
  * Ein Kind derselben Klasse auf einem zufälligen Nachbarfeld gebähren
  */
-void createChild(struct Map *map, int x, int y)
+void createChild(struct Map *map, struct Field *field)
 {
-	struct Field *field = getField(map, x, y);
-
-	struct Field *neighboredField = getRandomEmptyNeighboredField(map, x, y);
+	struct Field *neighboredField = getRandomEmptyNeighboredField(map, field);
 	if (neighboredField)
 	{
 		neighboredField->populationType = field->populationType;
@@ -107,16 +136,28 @@ void createChild(struct Map *map, int x, int y)
 }
 
 /**
+ * gibt ein zufälliges benachbartes Feld zurück
+ *
+ */
+struct Field* getRandomNeighboredField(struct Map *map, struct Field *field)
+{
+	enum Direction direction = rand() % 4;
+	struct Field *neighboredField = getNeighboringFieldInDirection(map, field->x, field->y, direction);
+
+	return neighboredField;
+}
+
+/**
  * gibt ein zufälliges benachbartes Feld zurück, das noch frei ist
  * ist keines mehr frei, wird 0 zurückgegeben
  *
  */
-struct Field* getRandomEmptyNeighboredField(struct Map *map, int x, int y)
+struct Field* getRandomEmptyNeighboredField(struct Map *map, struct Field *field)
 {
 	enum Direction direction = rand() % 4;
 	for (int i = 0; i < 4; i++)
 	{
-		struct Field *neighboredField = getNeighboringFieldInDirection(map, x, y, direction);
+		struct Field *neighboredField = getNeighboringFieldInDirection(map, field->x, field->y, direction);
 		if (neighboredField->populationType == EMPTY)
 		{
 			return neighboredField;
@@ -124,31 +165,6 @@ struct Field* getRandomEmptyNeighboredField(struct Map *map, int x, int y)
 
 		i++;
 		direction = (direction + 1) % 4;
-	}
-
-	return 0;
-}
-
-/**
- * Suche nach Beute auf Nachbarfeldern und fresse sie falls vorhanden
- */
-int checkForPrey(struct Map *map, int x, int y)
-{
-	struct Field *field = getField(map, x, y);
-
-	for(int i = 0; i < 4; i++) // test all directions
-	{
-		struct Field *neighboredField = getNeighboringFieldInDirection(map, x, y, i); // possible prey
-		if(neighboredField->populationType == PREY)
-		{
-			moveFieldToOtherField(field, neighboredField);
-			resetField(field);
-
-			// neighboredField now contains Predator
-			neighboredField->starveTime = 0;
-
-			return 1;
-		}
 	}
 
 	return 0;

@@ -33,12 +33,12 @@ struct Map* initMap(int width, int height)
 			resetField(field);
 
 			int pop = rand() % 100;
-			if (pop < 20)
+			if (pop < 10)
 			{
 				pop = PREDATOR;
 				predatorCounter++;
 			}
-			else if (pop < 50)
+			else if (pop < 30)
 			{
 				pop = PREY;
 				preyCounter++;
@@ -51,6 +51,8 @@ struct Map* initMap(int width, int height)
 
 			field->populationType = pop; // RANDOM population Type
 			field->age = rand() % ELDERLY_AGE; // RANDOM age
+			field->x = i;
+			field->y = j;
 		}
 	}
 
@@ -91,31 +93,39 @@ void printToBitmap(struct Map *map, char* filepath)
 	}
 
 	// scale image (remove in final version)
-	int scaleFactor = 10;
-	int scaledWidth = scaleFactor * width;
-	int scaledHeight = scaleFactor * height;
-
-	char *scaledPixelMap;
-	scaledPixelMap = malloc(sizeof(char) * scaledWidth * scaledHeight * 3);
-
-	int px, py;
-	for(int i = 0; i < scaledWidth; i++)
+	int scaleFactor = SCALE_FACTOR;
+	if(scaleFactor > 1 && width == height)
 	{
-		for(int j = 0; j < scaledHeight; j++)
+		int scaledWidth = scaleFactor * width;
+		int scaledHeight = scaleFactor * height;
+
+		char *scaledPixelMap;
+		scaledPixelMap = malloc(sizeof(char) * scaledWidth * scaledHeight * 3);
+
+		int px, py;
+		for(int i = 0; i < scaledWidth; i++)
 		{
-			px = (int) (j * (1.0 / scaleFactor));
-			py = (int) (i * (1.0 / scaleFactor));
+			for(int j = 0; j < scaledHeight; j++)
+			{
+				px = (int) (j * (1.0 / scaleFactor));
+				py = (int) (i * (1.0 / scaleFactor));
 
-			int index = 3 * (i * scaledWidth + j);
-			int origIndex = 3 * (py * width + px);
+				int index = 3 * (i * scaledWidth + j);
+				int origIndex = 3 * (py * width + px);
 
-			scaledPixelMap[index] = pixelMap[origIndex];
-			scaledPixelMap[index + 1] = pixelMap[origIndex + 1];
-			scaledPixelMap[index + 2] = pixelMap[origIndex + 2];
+				scaledPixelMap[index] = pixelMap[origIndex];
+				scaledPixelMap[index + 1] = pixelMap[origIndex + 1];
+				scaledPixelMap[index + 2] = pixelMap[origIndex + 2];
+			}
 		}
+
+		write_bmp(filepath, scaledWidth, scaledHeight, scaledPixelMap);
+	}
+	else
+	{
+		write_bmp(filepath, width, height, pixelMap);
 	}
 
-	write_bmp(filepath, scaledWidth, scaledHeight, scaledPixelMap);
 
 }
 

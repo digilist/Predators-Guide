@@ -30,6 +30,8 @@ enum PopulationType
  */
 struct Field
 {
+	int x, y; // Position des Feldes
+
 	enum PopulationType populationType;
 
 	// wenn populationType == EMPTY muss keines dieser Werte gesetzt werden
