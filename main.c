@@ -49,6 +49,9 @@ int main()
 			break;
 	}
 
+	sprintf(buffer, "cd %s && ffmpeg -i %%d.bmp -pix_fmt rgb24 output.gif && gifsicle --delay=5 --loop output.gif > pred.gif && rm output.gif", BITMAP_PATH);
+	system(buffer);
+
 	// and then
 	/*	ffmpeg -i %d.bmp -pix_fmt rgb24 output.gif && \
 		gifsicle --delay=5 --loop output.gif > pred.gif
