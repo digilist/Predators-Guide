@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "config.h"
 #include "map.h"
@@ -13,6 +14,8 @@
  */
 int main()
 {
+	srand((unsigned)time(0));
+
 	printf("=======================\n");
 	printf("|  PREDATOR vs. PREY  |\n");
 	printf("=======================\n");
@@ -48,6 +51,8 @@ int main()
 		if (i > SIMULATION_STEPS)
 			break;
 	}
+
+//	return 0;
 
 	sprintf(buffer, "cd %s && ffmpeg -i %%d.bmp -pix_fmt rgb24 output.gif && gifsicle --delay=5 --loop output.gif > pred.gif && rm output.gif", BITMAP_PATH);
 	system(buffer);

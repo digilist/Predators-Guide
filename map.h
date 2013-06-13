@@ -1,3 +1,5 @@
+#include "config.h"
+
 #ifndef MAP_H_INCLUDED
 #define MAP_H_INCLUDED
 
@@ -18,10 +20,15 @@ struct Map
 /**
  * die möglichen Feldbelegungen: leeres Feld, Räuber & Beute
  *
+ * beim Hinzufügen oder Entfernen die Konfiguration in der config.h anpassen!
  */
 enum PopulationType
 {
-	EMPTY, PREDATOR, PREY
+	EMPTY,
+	PLANT,
+	HERBIVORE,
+	CARNIVORE,
+	NUMBER_OF_POPULATION_TYPES
 };
 
 /**
@@ -50,7 +57,10 @@ void printToBitmap(struct Map *map, char* filename);
 
 struct Field* getField(struct Map *map, int x, int y);
 
-void moveFieldToOtherField(struct Field *field, struct Field *neighboredField);
+void copyFieldToOtherField(struct Field *sourceField, struct Field *targetField);
+
+void moveFieldToOtherField(struct Field **sourceField, struct Field *neighboredField);
+
 
 void resetField(struct Field *field);
 

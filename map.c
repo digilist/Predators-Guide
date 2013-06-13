@@ -21,9 +21,9 @@ struct Map* initMap(int width, int height)
 	map->numberOfPrey = 0;
 	map->fields = malloc(sizeof(struct Field) * width * height);
 
-	int predatorCounter = 0;
-	int preyCounter = 0;
-	int emptyCounter = 0;
+	int counter[NUMBER_OF_POPULATION_TYPES];
+	for (int i = 0; i < NUMBER_OF_POPULATION_TYPES; i++)
+		counter[i] = 0;
 
 	for (int i = 0; i < map->width; i++)
 	{
@@ -33,31 +33,28 @@ struct Map* initMap(int width, int height)
 			resetField(field);
 
 			int pop = rand() % 100;
-			if (pop < 10)
+			if(pop < 30) // ~30% filled
 			{
-				pop = PREDATOR;
-				predatorCounter++;
-			}
-			else if (pop < 30)
-			{
-				pop = PREY;
-				preyCounter++;
+				pop = 1 + rand() % (NUMBER_OF_POPULATION_TYPES - 1); // exclude empty
 			}
 			else
-			{
 				pop = EMPTY;
-				emptyCounter++;
-			}
+
+			counter[pop]++;
+
+			if(pop != EMPTY)
+				field->age = rand() % ELDERLY_AGE[pop]; // RANDOM age
 
 			field->populationType = pop; // RANDOM population Type
-			field->age = rand() % ELDERLY_AGE; // RANDOM age
 			field->x = i;
 			field->y = j;
 		}
 	}
 
-	printf("Placed %d Predators, %d Prey (%d empty fields)\n", predatorCounter, preyCounter,
-			emptyCounter);
+	printf("Placed %d Plants\n", counter[PLANT]);
+	printf("       %d Herbivors\n", counter[HERBIVORE]);
+	printf("       %d Carnivores\n", counter[CARNIVORE]);
+	printf("%d fields left Empty\n", counter[EMPTY]);
 
 	return map;
 }
@@ -85,10 +82,18 @@ void printToBitmap(struct Map *map, char* filepath)
 			pixelMap[index + 1] = 0; // g
 			pixelMap[index + 2] = 0; // b
 
-			if (field->populationType == PREDATOR)
-				pixelMap[index] = 255; // predator is red
-			else if (field->populationType == PREY)
-				pixelMap[index + 1] = 255; // prey is green
+			if (field->populationType == CARNIVORE)
+				pixelMap[index] = 255; // carnivores are red
+			else if (field->populationType == HERBIVORE)
+				pixelMap[index + 2] = 255; // herbivores are blue
+			else if (field->populationType == PLANT)
+				pixelMap[index + 1] = 255; // plants are green
+			else if(field->populationType == EMPTY)
+			{
+				pixelMap[index] = 255;
+				pixelMap[index + 1] = 255;
+				pixelMap[index + 2] = 255;
+			}
 		}
 	}
 
@@ -142,7 +147,7 @@ struct Field* getField(struct Map *map, int x, int y)
  * kopiert ein Feld auf ein anderes Feld
  *
  */
-void moveFieldToOtherField(struct Field *sourceField, struct Field *targetField)
+void copyFieldToOtherField(struct Field *sourceField, struct Field *targetField)
 {
 	targetField->populationType = sourceField->populationType;
 	targetField->age = sourceField->age;
@@ -150,6 +155,17 @@ void moveFieldToOtherField(struct Field *sourceField, struct Field *targetField)
 	targetField->lastStep = sourceField->lastStep;
 
 	resetField(sourceField);
+}
+
+/**
+ * verschiebt ein Feld auf das Zielfeld
+ * und schreibt die neue Adresse des Zielfeldes auf das Sourcefeld
+ */
+void moveFieldToOtherField(struct Field **sourceField, struct Field *targetField)
+{
+	copyFieldToOtherField(*sourceField, targetField);
+
+	*sourceField = targetField;
 }
 
 /**
