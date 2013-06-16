@@ -59,7 +59,7 @@ struct Field* getField(struct Map *map, int x, int y);
 
 void copyFieldToOtherField(struct Field *sourceField, struct Field *targetField);
 
-void moveFieldToOtherField(struct Field **sourceField, struct Field *neighboredField);
+void moveFieldToOtherField(struct Field **sourceField, struct Field *targetField);
 
 
 void resetField(struct Field *field);

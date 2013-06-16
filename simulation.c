@@ -27,7 +27,7 @@ int moveAnimal(struct Map *map, struct Field **field);
 
 void createChild(struct Map *map, struct Field *field);
 
-struct Field* getRandomEmptyNeighboredField(struct Map *map, struct Field *field);
+struct Field* getRandomEmptyNeighboringField(struct Map *map, struct Field *field);
 
 struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y,
 		enum Direction direction);
@@ -151,14 +151,14 @@ int checkForPrey(struct Map *map, struct Field **field)
 {
 	for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++) // alle umliegenden Felder prüfen
 	{
-		struct Field *neighboredField = getNeighboringFieldInDirection(map, (*field)->x,
+		struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x,
 				(*field)->y, i);
 
-		if (((*field)->populationType == CARNIVORE && neighboredField->populationType == HERBIVORE)
+		if (((*field)->populationType == CARNIVORE && neighboringField->populationType == HERBIVORE)
 				|| // Fleischfresser frisst Pflanzenfresser
-				((*field)->populationType == HERBIVORE && neighboredField->populationType == PLANT)) // Pflanzenfresser frisst Pflanze
+				((*field)->populationType == HERBIVORE && neighboringField->populationType == PLANT)) // Pflanzenfresser frisst Pflanze
 		{
-			moveFieldToOtherField(field, neighboredField);
+			moveFieldToOtherField(field, neighboringField);
 			(*field)->starveTime = 0;
 
 			return 1;
@@ -174,11 +174,11 @@ int checkForPrey(struct Map *map, struct Field **field)
  */
 int moveAnimal(struct Map *map, struct Field **field)
 {
-	struct Field *neighboredField = getRandomEmptyNeighboredField(map, *field);
+	struct Field *neighboringField = getRandomEmptyNeighboringField(map, *field);
 
-	if (neighboredField)
+	if (neighboringField)
 	{
-		moveFieldToOtherField(field, neighboredField);
+		moveFieldToOtherField(field, neighboringField);
 		return 1;
 	}
 
@@ -190,10 +190,10 @@ int moveAnimal(struct Map *map, struct Field **field)
  */
 void createChild(struct Map *map, struct Field *field)
 {
-	struct Field *neighboredField = getRandomEmptyNeighboredField(map, field);
-	if (neighboredField)
+	struct Field *neighboringField = getRandomEmptyNeighboringField(map, field);
+	if (neighboringField)
 	{
-		neighboredField->populationType = field->populationType;
+		neighboringField->populationType = field->populationType;
 		return;
 	}
 
@@ -204,11 +204,11 @@ void createChild(struct Map *map, struct Field *field)
 
 		for(int i = 0; i < NUMBER_OF_DIRECTIONS; i++)
 		{
-			neighboredField = getNeighboringFieldInDirection(map, field->x, field->y, i);
-			if(neighboredField->populationType == PLANT)
+			neighboringField = getNeighboringFieldInDirection(map, field->x, field->y, i);
+			if(neighboringField->populationType == PLANT)
 			{
-				resetField(neighboredField);
-				neighboredField->populationType = field->populationType;
+				resetField(neighboringField);
+				neighboringField->populationType = field->populationType;
 			}
 		}
 	}
@@ -218,13 +218,13 @@ void createChild(struct Map *map, struct Field *field)
  * gibt ein zufälliges benachbartes Feld zurück
  *
  */
-struct Field* getRandomNeighboredField(struct Map *map, struct Field *field)
+struct Field* getRandomNeighboringField(struct Map *map, struct Field *field)
 {
 	enum Direction direction = rand() % 4;
-	struct Field *neighboredField = getNeighboringFieldInDirection(map, field->x, field->y,
+	struct Field *neighboringField = getNeighboringFieldInDirection(map, field->x, field->y,
 			direction);
 
-	return neighboredField;
+	return neighboringField;
 }
 
 /**
@@ -232,16 +232,16 @@ struct Field* getRandomNeighboredField(struct Map *map, struct Field *field)
  * ist keines mehr frei, wird 0 zurückgegeben
  *
  */
-struct Field* getRandomEmptyNeighboredField(struct Map *map, struct Field *field)
+struct Field* getRandomEmptyNeighboringField(struct Map *map, struct Field *field)
 {
 	enum Direction direction = rand() % NUMBER_OF_DIRECTIONS;
 	for (int i = 0; i < 4; i++)
 	{
-		struct Field *neighboredField = getNeighboringFieldInDirection(map, field->x, field->y,
+		struct Field *neighboringField = getNeighboringFieldInDirection(map, field->x, field->y,
 				direction);
-		if (neighboredField->populationType == EMPTY)
+		if (neighboringField->populationType == EMPTY)
 		{
-			return neighboredField;
+			return neighboringField;
 		}
 
 		i++;
