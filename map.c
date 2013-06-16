@@ -153,8 +153,6 @@ void copyFieldToOtherField(struct Field *sourceField, struct Field *targetField)
 	targetField->age = sourceField->age;
 	targetField->starveTime = sourceField->starveTime;
 	targetField->lastStep = sourceField->lastStep;
-
-	resetField(sourceField);
 }
 
 /**
@@ -164,6 +162,7 @@ void copyFieldToOtherField(struct Field *sourceField, struct Field *targetField)
 void moveFieldToOtherField(struct Field **sourceField, struct Field *targetField)
 {
 	copyFieldToOtherField(*sourceField, targetField);
+	resetField(*sourceField);
 
 	*sourceField = targetField;
 }
