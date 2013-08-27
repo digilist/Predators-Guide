@@ -19,6 +19,7 @@ struct Coordinates
 	int y;
 };
 
+
 struct Coordinates* getRandomMovementOrder(struct Map *map);
 
 int checkForPrey(struct Map *map, struct Field **field);
@@ -40,7 +41,7 @@ struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y,
  * Simulation eines einzelnen Schrites auf dem Spielfeld
  *
  */
-void simulationStep(struct Map *map, int step)
+struct StepResult* simulationStep(struct Map *map, int step)
 {
 	struct Coordinates *movements;
 	movements = getRandomMovementOrder(map);
@@ -95,6 +96,27 @@ void simulationStep(struct Map *map, int step)
 				field->age++;
 		}
 	}
+
+	// statistics
+	struct StepResult *resultset = malloc(sizeof(struct StepResult));
+	resultset->amount_prey = 0;
+	resultset->amount_predators = 0;
+	resultset->current_step = step;
+	resultset->next = 0;
+
+	for (int x = 0; x < map->width; x++) {
+		for (int y = 0; y < map->height; y++) {
+			struct Field *field = getField(map, x, y);
+			
+			if (field->populationType == PREY) {
+				resultset->amount_prey++;
+			} else if (field->populationType == PREDATOR) {
+				resultset->amount_predators++;
+			}
+		}
+	}
+
+	return resultset;
 }
 
 int shouldDie(struct Field *field)

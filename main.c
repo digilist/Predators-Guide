@@ -36,11 +36,59 @@ int main()
 	printToBitmap(map, buffer);
 
 	int i = 1;
+
+	struct StepResult *current;
+	struct StepResult *first;
+	struct StepResult *temp_step_result;
+
+	int predator_trend;
+	int prey_trend;
+	int previous_predator_amount;
+	int previous_prey_amount;
+
 	while (1)
 	{
 		printf("Simulation Step %d\n", i);
+		if (i == 1) {
+			first = simulationStep(map, i);
+			current = first;
+			temp_step_result = first;
 
-		simulationStep(map, i);
+			previous_predator_amount = first->amount_predators;
+			previous_prey_amount = first->amount_prey;
+		} else {
+			temp_step_result = simulationStep(map, i);
+
+			if (i > 2) { // there can be no turning point in the first two rounds
+				
+				// check on turning point
+				if (((((previous_predator_amount - temp_step_result->amount_predators) < 0) != predator_trend)
+					&& (previous_predator_amount - temp_step_result->amount_predators) != 0)
+					|| ((((previous_prey_amount - temp_step_result->amount_prey) < 0) != prey_trend)
+					&& (previous_prey_amount - temp_step_result->amount_prey) != 0)) {
+					
+					// attach result set to chained list
+					current->next = temp_step_result;
+					current = current->next;
+
+					printf("\nTURNING POINT %d/%d\n\n", previous_predator_amount, previous_prey_amount);
+				}
+			}
+			
+			predator_trend = (previous_predator_amount - temp_step_result->amount_predators) < 0;
+			prey_trend = (previous_prey_amount - temp_step_result->amount_prey) < 0;
+			previous_predator_amount = temp_step_result->amount_predators;
+			previous_prey_amount = temp_step_result->amount_prey;
+			
+		}
+
+
+		if (temp_step_result->amount_predators == 0 || temp_step_result->amount_prey == 0) {
+			printf("One species died!\n");
+			break;
+		}
+		printf("%d/%d - ", temp_step_result->amount_predators, temp_step_result->amount_prey);
+
 
 		sprintf(buffer, abstractBitmapFilepath, i);
 		printToBitmap(map, buffer);
@@ -50,7 +98,7 @@ int main()
 			break;
 	}
 
-	createVideo();
+	//createVideo();
 
 	return 0;
 }
