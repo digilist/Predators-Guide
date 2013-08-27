@@ -33,7 +33,7 @@ int main()
 	struct Map *map = initMap(MAP_WIDTH, MAP_HEIGHT); // for scaling must be square
 
 	sprintf(buffer, abstractBitmapFilepath, 0);
-//	printToBitmap(map, buffer);
+	printToBitmap(map, buffer);
 
 	int i = 1;
 	while (1)
@@ -43,14 +43,14 @@ int main()
 		simulationStep(map, i);
 
 		sprintf(buffer, abstractBitmapFilepath, i);
-//		printToBitmap(map, buffer);
+		printToBitmap(map, buffer);
 
 		i++;
 		if (i > SIMULATION_STEPS)
 			break;
 	}
 
-//	createVideo();
+	createVideo();
 
 	return 0;
 }
