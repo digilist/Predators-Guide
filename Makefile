@@ -1,15 +1,15 @@
 CC = /usr/bin/gcc
 CFLAGS = -Wall -lm -std=c99 -g -o predators.out *.c
 
-all: compile run
+all: compile seriell 
 
 compile: main.c
 	$(CC) $(CFLAGS)
 
-seriell: seriell.c
-	$(CC) $(CFLAGS)
+parallel: predators.out
+	./predators.out -p
 
-run: predators.out
+seriell: predators.out
 	./predators.out
 
 valgrind: predators.out

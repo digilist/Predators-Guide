@@ -10,6 +10,15 @@ struct StepResult
 	int current_step;
 	struct StepResult *next;
 };
+
+struct SimulationResult
+{
+	int simulationSteps;
+	struct StepResult *firstStepResult;
+};
+
+struct SimulationResult* runSimulation(struct RuntimeConfiguration *config);
+
 struct StepResult* simulationStep(struct Map *map, int i);
 
 #endif

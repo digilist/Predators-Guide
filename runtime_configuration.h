@@ -10,7 +10,8 @@ struct RuntimeConfiguration {
 	int		mapWidth,
 			mapHeight;
 	float	mapFillRate,
-			preyRate, predatorRate;
+			preyRate,
+			predatorRate;
 };
 
 struct RuntimeConfigurationList* generateRuntimes();

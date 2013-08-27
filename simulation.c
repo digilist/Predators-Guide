@@ -19,7 +19,6 @@ struct Coordinates
 	int y;
 };
 
-
 struct Coordinates* getRandomMovementOrder(struct Map *map);
 
 int checkForPrey(struct Map *map, struct Field **field);
@@ -34,8 +33,86 @@ int shouldDie(struct Field *field);
 
 struct Field* getRandomEmptyNeighboringField(struct Map *map, struct Field *field);
 
-struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y,
-		enum Direction direction);
+struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y, enum Direction direction);
+
+/**
+ * führt eine einzelne Simulation mit der gegebenen Konfiguration aus
+ *
+ */
+struct SimulationResult* runSimulation(struct RuntimeConfiguration *config)
+{
+	struct Map *map = initMap(config);
+
+	int i = 0;
+
+	struct StepResult *current;
+	struct StepResult *first;
+	struct StepResult *temp_step_result;
+
+	int predator_trend;
+	int prey_trend;
+	int previous_predator_amount;
+	int previous_prey_amount;
+
+	while (1)
+	{
+		i++;
+		printf("Simulation Step %d\n", i);
+
+		if (i == 1)
+		{
+			first = simulationStep(map, i);
+			current = first;
+			temp_step_result = first;
+
+			previous_predator_amount = first->amount_predators;
+			previous_prey_amount = first->amount_prey;
+		}
+		else
+		{
+			temp_step_result = simulationStep(map, i);
+
+			if (i > 2)
+			{ // there can be no turning point in the first two rounds
+
+				// check on turning point
+				if (((((previous_predator_amount - temp_step_result->amount_predators) < 0) != predator_trend)
+						&& (previous_predator_amount - temp_step_result->amount_predators) != 0)
+						|| ((((previous_prey_amount - temp_step_result->amount_prey) < 0) != prey_trend)
+								&& (previous_prey_amount - temp_step_result->amount_prey) != 0))
+				{
+
+					// attach result set to linked list
+					current->next = temp_step_result;
+					current = current->next;
+
+					printf("\nTURNING POINT %d/%d\n\n", previous_predator_amount, previous_prey_amount);
+				}
+			}
+
+			predator_trend = (previous_predator_amount - temp_step_result->amount_predators) < 0;
+			prey_trend = (previous_prey_amount - temp_step_result->amount_prey) < 0;
+			previous_predator_amount = temp_step_result->amount_predators;
+			previous_prey_amount = temp_step_result->amount_prey;
+		}
+
+		if (temp_step_result->amount_predators == 0 || temp_step_result->amount_prey == 0)
+		{
+			printf("One species died!\n");
+			break;
+		}
+		printf("%d/%d - ", temp_step_result->amount_predators, temp_step_result->amount_prey);
+
+		if (i > MAX_SIMULATION_STEPS)
+			break;
+	}
+
+	struct SimulationResult *result = malloc(sizeof(struct SimulationResult));
+	result->simulationSteps = i;
+	result->firstStepResult = first;
+
+	return result;
+}
 
 /**
  * Simulation eines einzelnen Schrites auf dem Spielfeld
@@ -50,8 +127,8 @@ struct StepResult* simulationStep(struct Map *map, int step)
 		struct Field *field = getField(map, movements[i].x, movements[i].y);
 
 		if (field->populationType != EMPTY && field->lastStep < step) // 2. Bedinung zur Absicherung, damit
-																		  // kein Tier in einer Runde mehrfach
-																		  // Aktionen ausführt (z.B. durch Bewegung)
+																	  // kein Tier in einer Runde mehrfach
+																	  // Aktionen ausführt (z.B. durch Bewegung)
 		{
 			field->lastStep++;
 			int moved = 0;
@@ -104,13 +181,18 @@ struct StepResult* simulationStep(struct Map *map, int step)
 	resultset->current_step = step;
 	resultset->next = 0;
 
-	for (int x = 0; x < map->width; x++) {
-		for (int y = 0; y < map->height; y++) {
+	for (int x = 0; x < map->width; x++)
+	{
+		for (int y = 0; y < map->height; y++)
+		{
 			struct Field *field = getField(map, x, y);
-			
-			if (field->populationType == PREY) {
+
+			if (field->populationType == PREY)
+			{
 				resultset->amount_prey++;
-			} else if (field->populationType == PREDATOR) {
+			}
+			else if (field->populationType == PREDATOR)
+			{
 				resultset->amount_predators++;
 			}
 		}
@@ -121,8 +203,8 @@ struct StepResult* simulationStep(struct Map *map, int step)
 
 int shouldDie(struct Field *field)
 {
-	return field->age > ELDERLY_AGE[field->populationType] ||
-			(DYING_RATE[field->populationType] > 0 && rand() % (int) (1 / DYING_RATE[field->populationType]) == 0);
+	return field->age > ELDERLY_AGE[field->populationType]
+			|| (DYING_RATE[field->populationType] > 0 && rand() % (int) (1 / DYING_RATE[field->populationType]) == 0);
 }
 
 int shouldGetChild(int populationType)
@@ -171,8 +253,7 @@ int checkForPrey(struct Map *map, struct Field **field)
 	{
 		for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++) // alle umliegenden Felder prüfen
 		{
-			struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x,
-					(*field)->y, i);
+			struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, i);
 
 			if (neighboringField->populationType == PREY) // Pflanzenfresser frisst Pflanze
 			{
@@ -224,8 +305,7 @@ void createChild(struct Map *map, struct Field *field)
 struct Field* getRandomNeighboringField(struct Map *map, struct Field *field)
 {
 	enum Direction direction = rand() % 4;
-	struct Field *neighboringField = getNeighboringFieldInDirection(map, field->x, field->y,
-			direction);
+	struct Field *neighboringField = getNeighboringFieldInDirection(map, field->x, field->y, direction);
 
 	return neighboringField;
 }
@@ -240,8 +320,7 @@ struct Field* getRandomEmptyNeighboringField(struct Map *map, struct Field *fiel
 	enum Direction direction = rand() % NUMBER_OF_DIRECTIONS;
 	for (int i = 0; i < 4; i++)
 	{
-		struct Field *neighboringField = getNeighboringFieldInDirection(map, field->x, field->y,
-				direction);
+		struct Field *neighboringField = getNeighboringFieldInDirection(map, field->x, field->y, direction);
 		if (neighboringField->populationType == EMPTY)
 		{
 			return neighboringField;
@@ -257,8 +336,7 @@ struct Field* getRandomEmptyNeighboringField(struct Map *map, struct Field *fiel
 /**
  * gibt das benachbarte Feld in der gegebenen Richtung zurück
  */
-struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y,
-		enum Direction direction)
+struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y, enum Direction direction)
 {
 
 	if (direction == UP || direction == UP_LEFT || direction == UP_RIGHT)
