@@ -1,4 +1,5 @@
 #include "config.h"
+#include "runtime_configuration.h"
 
 #ifndef MAP_H_INCLUDED
 #define MAP_H_INCLUDED
@@ -50,7 +51,7 @@ struct Field
 
 };
 
-struct Map* initMap(int width, int height);
+struct Map* initMap(struct RuntimeConfiguration *config);
 
 void printToBitmap(struct Map *map, char* filename);
 
@@ -59,7 +60,6 @@ struct Field* getField(struct Map *map, int x, int y);
 void copyFieldToOtherField(struct Field *sourceField, struct Field *targetField);
 
 void moveFieldToOtherField(struct Field **sourceField, struct Field *targetField);
-
 
 void resetField(struct Field *field);
 

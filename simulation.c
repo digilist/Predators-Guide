@@ -48,7 +48,7 @@ void simulationStep(struct Map *map, int step)
 	{
 		struct Field *field = getField(map, movements[i].x, movements[i].y);
 
-		if (field->populationType != EMPTY && field->lastStep < step)// 2. Bedinung zur Absicherung, damit
+		if (field->populationType != EMPTY && field->lastStep < step) // 2. Bedinung zur Absicherung, damit
 																		  // kein Tier in einer Runde mehrfach
 																		  // Aktionen ausführt (z.B. durch Bewegung)
 		{

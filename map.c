@@ -10,14 +10,14 @@
  * 	Initialisiert das Spielfeld mit der angebenen Breite und Höhe
  *
  */
-struct Map* initMap(int width, int height)
+struct Map* initMap(struct RuntimeConfiguration *config)
 {
-	printf("Initializing a %dx%d field\n", width, height);
-
 	struct Map *map = malloc(sizeof(struct Map));
-	map->width = width;
-	map->height = height;
-	map->fields = malloc(sizeof(struct Field) * width * height);
+	map->width = config->mapWidth;
+	map->height = config->mapHeight;
+	map->fields = malloc(sizeof(struct Field) * map->width * map->height);
+
+	printf("Initializing a %dx%d field\n", map->width, map->height);
 
 	float mapFillRate = 0.3;
 	float ratio = 0.1;
