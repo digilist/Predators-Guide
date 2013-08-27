@@ -78,7 +78,7 @@ void simulationStep(struct Map *map, int step)
 			else
 			{
 				// Tiere ohne Beute verhungern irgendwann
-				if (field->populationType == HERBIVORE || field->populationType == CARNIVORE)
+				if (field->populationType == PREY || field->populationType == PREDATOR)
 				{
 					if (field->starveTime > MAX_STARVE_TIME[field->populationType])
 					{
@@ -153,14 +153,14 @@ struct Coordinates* getRandomMovementOrder(struct Map *map)
  */
 int checkForPrey(struct Map *map, struct Field **field)
 {
-	if ((*field)->populationType == CARNIVORE)
+	if ((*field)->populationType == PREDATOR)
 	{
 		for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++) // alle umliegenden Felder prüfen
 		{
 			struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x,
 					(*field)->y, i);
 
-			if (neighboringField->populationType == HERBIVORE) // Pflanzenfresser frisst Pflanze
+			if (neighboringField->populationType == PREY) // Pflanzenfresser frisst Pflanze
 			{
 				moveFieldToOtherField(field, neighboringField);
 				(*field)->starveTime = 0;

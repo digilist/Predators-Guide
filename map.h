@@ -25,8 +25,8 @@ struct Map
 enum PopulationType
 {
 	EMPTY,
-	HERBIVORE,
-	CARNIVORE,
+	PREY,
+	PREDATOR,
 	NUMBER_OF_POPULATION_TYPES
 };
 

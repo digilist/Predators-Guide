@@ -9,29 +9,29 @@ const char BITMAP_FILENAME[] = "%d.bmp"; // Dateiname für Bitmap (muss ein %d f
 const int MAP_WIDTH = 1000; // Breite der Karte
 const int MAP_HEIGHT = 1000; // Höhe der Karte
 const int SCALE_FACTOR = 1; // Skalierungsfaktor für die Bildausgabe
-const int SIMULATION_STEPS = 500; // Anzahl der Simulationsschritte -1 für unendlich
+const int SIMULATION_STEPS = 10; // Anzahl der Simulationsschritte -1 für unendlich
 
 const int ELDERLY_AGE[NUMBER_OF_POPULATION_TYPES] = {
 	0, // EMPTY
-	18, // HERBIVORE
-	14 // CARNIVORE
+	18, // PREY
+	14 // PREDATOR
 };
 
 const int MAX_STARVE_TIME[NUMBER_OF_POPULATION_TYPES] = {
 	0, // EMPTY
-	10000000, // HERBIVORE
-	5 // CARNIVORE
+	10000000, // PREY
+	5 // PREDATOR
 };
 
 const float DYING_RATE[NUMBER_OF_POPULATION_TYPES] = {
 	0, // EMPTY
-	0.005, // HERBIVORE
-	0.02 // CARNIVORE
+	0.005, // PREY
+	0.02 // PREDATOR
 };
 
 const float BIRTH_RATE[NUMBER_OF_POPULATION_TYPES] = {
 	0, // EMPTY
-	0.2, // HERBIVORE
-	0.12 // CARNIVORE
+	0.2, // PREY
+	0.12 // PREDATOR
 };
 

@@ -17,8 +17,6 @@ struct Map* initMap(int width, int height)
 	struct Map *map = malloc(sizeof(struct Map));
 	map->width = width;
 	map->height = height;
-	map->numberOfPredators = 0;
-	map->numberOfPrey = 0;
 	map->fields = malloc(sizeof(struct Field) * width * height);
 
 	float mapFillRate = 0.3;
@@ -40,11 +38,11 @@ struct Map* initMap(int width, int height)
 			{
 				if(rand() % (int) (1 / ratio) == 0)
 				{
-					pop = CARNIVORE;
+					pop = PREDATOR;
 				}
 				else
 				{
-					pop = HERBIVORE;
+					pop = PREY;
 				}
 			}
 
@@ -59,8 +57,8 @@ struct Map* initMap(int width, int height)
 		}
 	}
 
-	printf("Spawned %d Herbivors\n", counter[HERBIVORE]);
-	printf("        %d Carnivores\n", counter[CARNIVORE]);
+	printf("Spawned %d Prey\n", counter[PREY]);
+	printf("        %d Predators\n", counter[PREDATOR]);
 	printf("%d fields left Empty\n", counter[EMPTY]);
 
 	return map;
@@ -92,10 +90,10 @@ void printToBitmap(struct Map *map, char* filepath)
 			pixelMap[index + 1] = 0; // g
 			pixelMap[index + 2] = 0; // b
 
-			if (field->populationType == CARNIVORE)
-				pixelMap[index] = 255; // carnivores are red
-			else if (field->populationType == HERBIVORE)
-				pixelMap[index + 2] = 255; // herbivores are blue
+			if (field->populationType == PREDATOR)
+				pixelMap[index] = 255; // predetaors are red
+			else if (field->populationType == PREY)
+				pixelMap[index + 2] = 255; // preys are blue
 			else if(field->populationType == EMPTY)
 			{
 				pixelMap[index] = 255;
