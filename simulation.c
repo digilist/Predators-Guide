@@ -27,6 +27,10 @@ int moveAnimal(struct Map *map, struct Field **field);
 
 void createChild(struct Map *map, struct Field *field);
 
+int shouldGetChild(int populationType);
+
+int shouldDie(struct Field *field);
+
 struct Field* getRandomEmptyNeighboringField(struct Map *map, struct Field *field);
 
 struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y,
@@ -44,17 +48,7 @@ void simulationStep(struct Map *map, int step)
 	{
 		struct Field *field = getField(map, movements[i].x, movements[i].y);
 
-		if (field->populationType == PLANT)
-		{
-			if (field->age >= MATURITY_AGE[field->populationType])
-			{
-				resetField(field);
-			}
-
-			if (field->populationType != EMPTY) // wenn nicht gestorben
-				field->age++;
-		}
-		else if (field->populationType != EMPTY && field->lastStep < step)// 2. Bedinung zur Absicherung, damit
+		if (field->populationType != EMPTY && field->lastStep < step)// 2. Bedinung zur Absicherung, damit
 																		  // kein Tier in einer Runde mehrfach
 																		  // Aktionen ausführt (z.B. durch Bewegung)
 		{
@@ -71,13 +65,13 @@ void simulationStep(struct Map *map, int step)
 			}
 
 			// überprüfe Alter auf Schwangerschaft
-			if (field->age >= MATURITY_AGE[field->populationType])
+			if (shouldGetChild(field->populationType))
 			{
 				createChild(map, field);
 			}
 
 			// wenn das Tier zu alt ist, stirbt es
-			if (field->age > ELDERLY_AGE[field->populationType])
+			if (shouldDie(field))
 			{
 				resetField(field);
 			}
@@ -101,15 +95,25 @@ void simulationStep(struct Map *map, int step)
 				field->age++;
 		}
 
-		if (field->populationType == EMPTY)
-		{
-//				if(rand() % (3 * MAX_PLANT_AGE) == 0)
-			if (rand() % ELDERLY_AGE[PLANT] == 0)
-			{
-				field->populationType = PLANT;
-			}
-		}
+//		if (field->populationType == EMPTY)
+//		{
+//			if (shouldGetChild(PLANT))
+//			{
+//				field->populationType = PLANT;
+//			}
+//		}
 	}
+}
+
+int shouldDie(struct Field *field)
+{
+	return field->age > ELDERLY_AGE[field->populationType] ||
+			(DYING_RATE[field->populationType] > 0 && rand() % (int) (1 / DYING_RATE[field->populationType]) == 0);
+}
+
+int shouldGetChild(int populationType)
+{
+	return BIRTH_RATE[populationType] > 0 && rand() % (int) (1 / BIRTH_RATE[populationType]) == 0;
 }
 
 struct Coordinates* getRandomMovementOrder(struct Map *map)
@@ -149,19 +153,20 @@ struct Coordinates* getRandomMovementOrder(struct Map *map)
  */
 int checkForPrey(struct Map *map, struct Field **field)
 {
-	for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++) // alle umliegenden Felder prüfen
+	if ((*field)->populationType == CARNIVORE)
 	{
-		struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x,
-				(*field)->y, i);
-
-		if (((*field)->populationType == CARNIVORE && neighboringField->populationType == HERBIVORE)
-				|| // Fleischfresser frisst Pflanzenfresser
-				((*field)->populationType == HERBIVORE && neighboringField->populationType == PLANT)) // Pflanzenfresser frisst Pflanze
+		for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++) // alle umliegenden Felder prüfen
 		{
-			moveFieldToOtherField(field, neighboringField);
-			(*field)->starveTime = 0;
+			struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x,
+					(*field)->y, i);
 
-			return 1;
+			if (neighboringField->populationType == HERBIVORE) // Pflanzenfresser frisst Pflanze
+			{
+				moveFieldToOtherField(field, neighboringField);
+				(*field)->starveTime = 0;
+
+				return 1;
+			}
 		}
 	}
 
@@ -195,22 +200,6 @@ void createChild(struct Map *map, struct Field *field)
 	{
 		neighboringField->populationType = field->populationType;
 		return;
-	}
-
-	if(field->populationType == HERBIVORE)
-	{
-		// Pflanzenfresser können auch auf Pflanzen Kinder zur Welt bringen, weil Sie dann direkt gefressen werden
-		// Suche nächstes Feld mit Pflanze
-
-		for(int i = 0; i < NUMBER_OF_DIRECTIONS; i++)
-		{
-			neighboringField = getNeighboringFieldInDirection(map, field->x, field->y, i);
-			if(neighboringField->populationType == PLANT)
-			{
-				resetField(neighboringField);
-				neighboringField->populationType = field->populationType;
-			}
-		}
 	}
 }
 

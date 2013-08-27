@@ -50,12 +50,7 @@ int main()
 			break;
 	}
 
-	createVideo();
-
-	// and then
-	/*	ffmpeg -i %d.bmp -pix_fmt rgb24 output.gif && \
-		gifsicle --delay=5 --loop output.gif > pred.gif
-	 */
+//	createVideo();
 
 	return 0;
 }
