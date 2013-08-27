@@ -12,7 +12,7 @@ extern const int SCALE_FACTOR; // Skalierungsfaktor für die Bildausgabe
 extern const int SIMULATION_STEPS; // Anzahl der Simulationsschritte -1 für unendlich
 
 extern const int ELDERLY_AGE[]; // Sterbelter
-extern const int MAX_STARVE_TIME[]; // max. Jahre Hunger
+extern const int PREDATOR_MAX_STARVE_TIME; // max. Jahre Hunger für Predator
 
 extern const float BIRTH_RATE[]; // Geburtenrate
 extern const float DYING_RATE[]; // Sterbewahrscheinlichkeit: 1/x

@@ -77,10 +77,10 @@ void simulationStep(struct Map *map, int step)
 			}
 			else
 			{
-				// Tiere ohne Beute verhungern irgendwann
-				if (field->populationType == PREY || field->populationType == PREDATOR)
+				// Predator ohne Beute verhungern irgendwann
+				if (field->populationType == PREDATOR)
 				{
-					if (field->starveTime > MAX_STARVE_TIME[field->populationType])
+					if (field->starveTime > PREDATOR_MAX_STARVE_TIME)
 					{
 						resetField(field);
 					}
@@ -94,14 +94,6 @@ void simulationStep(struct Map *map, int step)
 			if (field->populationType != EMPTY) // wenn nicht gestorben
 				field->age++;
 		}
-
-//		if (field->populationType == EMPTY)
-//		{
-//			if (shouldGetChild(PLANT))
-//			{
-//				field->populationType = PLANT;
-//			}
-//		}
 	}
 }
 
