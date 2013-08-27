@@ -12,6 +12,9 @@ seriell: seriell.c
 run: predators.out
 	./predators.out
 
+valgrind: predators.out
+		valgrind --leak-check=yes ./predators.out
+
 .PHONY: clean
 clean:
 	rm -f *.out
