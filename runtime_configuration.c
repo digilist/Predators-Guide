@@ -11,6 +11,19 @@ struct RuntimeConfigurationList* generateRuntimes()
 	struct RuntimeConfigurationList *list = 0;
 	struct RuntimeConfigurationList *last;
 
+	// testcase
+//	list = last = malloc(sizeof(struct RuntimeConfigurationList));
+//	list->next = 0;
+//	list->config = malloc(sizeof(struct RuntimeConfiguration));
+//
+//	list->config->mapWidth= 100;
+//	list->config->mapHeight = 100;
+//	list->config->mapFillRate = 0.5;
+//	list->config->predatorRate = 0.8;
+//	list->config->preyRate = 0.2;
+//
+//	return list;
+
 	for (int size = 100; size <= 100; size += 100)
 	{
 		for (float fillRate = 0.1; fillRate <= 0.5; fillRate += 0.1)

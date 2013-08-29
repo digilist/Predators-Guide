@@ -19,12 +19,12 @@ struct Map* initMap(struct RuntimeConfiguration *config)
 
 	printf("Initializing a %dx%d field\n", map->width, map->height);
 
-	float mapFillRate = 0.3;
-	float ratio = 0.1;
-
 	int counter[NUMBER_OF_POPULATION_TYPES];
 	for (int i = 0; i < NUMBER_OF_POPULATION_TYPES; i++)
 		counter[i] = 0;
+
+	int fillRate = config->mapFillRate * 100;
+	int predatorRate = config->predatorRate * 100;
 
 	for (int i = 0; i < map->width; i++)
 	{
@@ -34,9 +34,9 @@ struct Map* initMap(struct RuntimeConfiguration *config)
 			resetField(field);
 
 			int pop = EMPTY;
-			if(rand() % (int) (1 / mapFillRate) == 0)
+			if(randomInt(0, 100) <= fillRate)
 			{
-				if(rand() % (int) (1 / ratio) == 0)
+				if(randomInt(0, 100) <= predatorRate)
 				{
 					pop = PREDATOR;
 				}

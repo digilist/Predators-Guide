@@ -3,6 +3,7 @@
 #include "config.h"
 #include "simulation.h"
 #include "map.h"
+#include "result.h"
 
 /**
  * Richtungen in die sich ein Tier bewegen kann
@@ -18,6 +19,8 @@ struct Coordinates
 	int x;
 	int y;
 };
+
+struct StepResult* calculateStepResultset(struct Map *map, int step);
 
 struct Coordinates* getRandomMovementOrder(struct Map *map);
 
@@ -54,54 +57,50 @@ struct SimulationResult* runSimulation(struct RuntimeConfiguration *config)
 	int previous_predator_amount;
 	int previous_prey_amount;
 
+	// init first result
+	first = calculateStepResultset(map, 0);
+	current = first;
+	temp_step_result = first;
+
+	previous_predator_amount = first->amount_predators;
+	previous_prey_amount = first->amount_prey;
+
 	while (1)
 	{
 		i++;
-		printf("Simulation Step %d\n", i);
+		printf("Simulation Step %d", i);
 
-		if (i == 1)
-		{
-			first = simulationStep(map, i);
-			current = first;
-			temp_step_result = first;
+		temp_step_result = simulationStep(map, i);
 
-			previous_predator_amount = first->amount_predators;
-			previous_prey_amount = first->amount_prey;
-		}
-		else
-		{
-			temp_step_result = simulationStep(map, i);
+		if (i > 2)
+		{ // there can be no turning point in the first two rounds
 
-			if (i > 2)
-			{ // there can be no turning point in the first two rounds
+			// check on turning point
+			if (((((previous_predator_amount - temp_step_result->amount_predators) < 0) != predator_trend)
+					&& (previous_predator_amount - temp_step_result->amount_predators) != 0)
+					|| ((((previous_prey_amount - temp_step_result->amount_prey) < 0) != prey_trend)
+							&& (previous_prey_amount - temp_step_result->amount_prey) != 0))
+			{
 
-				// check on turning point
-				if (((((previous_predator_amount - temp_step_result->amount_predators) < 0) != predator_trend)
-						&& (previous_predator_amount - temp_step_result->amount_predators) != 0)
-						|| ((((previous_prey_amount - temp_step_result->amount_prey) < 0) != prey_trend)
-								&& (previous_prey_amount - temp_step_result->amount_prey) != 0))
-				{
+				// attach result set to linked list
+				current->next = temp_step_result;
+				current = current->next;
 
-					// attach result set to linked list
-					current->next = temp_step_result;
-					current = current->next;
-
-					printf("\nTURNING POINT %d/%d\n\n", previous_predator_amount, previous_prey_amount);
-				}
+				printf("\nTURNING POINT %d/%d\n\n", previous_predator_amount, previous_prey_amount);
 			}
-
-			predator_trend = (previous_predator_amount - temp_step_result->amount_predators) < 0;
-			prey_trend = (previous_prey_amount - temp_step_result->amount_prey) < 0;
-			previous_predator_amount = temp_step_result->amount_predators;
-			previous_prey_amount = temp_step_result->amount_prey;
 		}
+
+		predator_trend = (previous_predator_amount - temp_step_result->amount_predators) < 0;
+		prey_trend = (previous_prey_amount - temp_step_result->amount_prey) < 0;
+		previous_predator_amount = temp_step_result->amount_predators;
+		previous_prey_amount = temp_step_result->amount_prey;
 
 		if (temp_step_result->amount_predators == 0 || temp_step_result->amount_prey == 0)
 		{
-			printf("One species died!\n");
+			printf("\nOne species died!\n");
 			break;
 		}
-		printf("%d/%d - ", temp_step_result->amount_predators, temp_step_result->amount_prey);
+		printf(" - %d/%d\n", temp_step_result->amount_predators, temp_step_result->amount_prey);
 
 		if (i > MAX_SIMULATION_STEPS)
 			break;
@@ -174,6 +173,11 @@ struct StepResult* simulationStep(struct Map *map, int step)
 		}
 	}
 
+	return calculateStepResultset(map, step);
+}
+
+struct StepResult* calculateStepResultset(struct Map *map, int step)
+{
 	// statistics
 	struct StepResult *resultset = malloc(sizeof(struct StepResult));
 	resultset->amount_prey = 0;
@@ -203,13 +207,15 @@ struct StepResult* simulationStep(struct Map *map, int step)
 
 int shouldDie(struct Field *field)
 {
+	int dyingRate = DYING_RATE[field->populationType] * 100;
 	return field->age > ELDERLY_AGE[field->populationType]
-			|| (DYING_RATE[field->populationType] > 0 && rand() % (int) (1 / DYING_RATE[field->populationType]) == 0);
+			|| (DYING_RATE[field->populationType] > 0 && randomInt(0, 100) <= dyingRate);
 }
 
 int shouldGetChild(int populationType)
 {
-	return BIRTH_RATE[populationType] > 0 && rand() % (int) (1 / BIRTH_RATE[populationType]) == 0;
+	int birthRate = BIRTH_RATE[populationType] * 100;
+	return BIRTH_RATE[populationType] > 0 && randomInt(0, 100) <= birthRate;
 }
 
 struct Coordinates* getRandomMovementOrder(struct Map *map)

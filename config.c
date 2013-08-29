@@ -1,9 +1,11 @@
+#include <stdlib.h>
+
 #include "config.h"
 #include "map.h"
 
 const int PRINTING_DISABLED = 1;
 
-const char BITMAP_PATH[] = "/tmp/pred/"; // Pfad zu Ordner für Bitmap-Erzeugung mit abschließendem /
+const char SAVE_PATH[] = "/tmp/pred/"; // Pfad zu Ordner für Bitmap-Erzeugung mit abschließendem /
 const char BITMAP_FILENAME[] = "%d.bmp"; // Dateiname für Bitmap (muss ein %d für die Nummer des Schrittes enthalten)
 
 const int MAP_WIDTH = 100; // Breite der Karte
@@ -31,3 +33,7 @@ const float BIRTH_RATE[NUMBER_OF_POPULATION_TYPES] = {
 	0.08 // PREDATOR
 };
 
+int randomInt(int low, int high)
+{
+	return low + (double)rand () * (high - low + 1) / RAND_MAX;
+}

@@ -7,6 +7,7 @@
 #include "map.h"
 #include "simulation.h"
 #include "seriell.h"
+#include "result.h"
 
 void initFilesystem();
 void createVideo();
@@ -19,6 +20,7 @@ void createVideo();
 int main(int argc, char* argv[])
 {
 	srand((unsigned) time(0));
+	initFilesystem();
 
 	printf("=======================\n");
 	printf("|  PREDATOR vs. PREY  |\n");
@@ -48,17 +50,11 @@ int main(int argc, char* argv[])
 		else
 		{
 			struct SimulationResult *result = runSimulation(config);
+			saveResult(config, result);
 		}
 
 		i++;
 		next = next->next;
-
-		break;
-	}
-
-	if(parallel)
-	{
-		// TODO collect results
 	}
 
 //	initFilesystem();
@@ -145,10 +141,10 @@ void initFilesystem()
 {
 	char buffer[256];
 
-	sprintf(buffer, "rm -rf %s*", BITMAP_PATH);
+	sprintf(buffer, "rm -rf %s*", SAVE_PATH);
 	system(buffer);
 
-	sprintf(buffer, "mkdir -p %s", BITMAP_PATH);
+	sprintf(buffer, "mkdir -p %s", SAVE_PATH);
 	system(buffer);
 }
 
@@ -156,6 +152,6 @@ void createVideo()
 {
 	char buffer[256];
 
-	sprintf(buffer, "cd %s && ffmpeg -i %%d.bmp -pix_fmt rgb24 output.gif && gifsicle --delay=5 --loop output.gif > pred.gif && rm output.gif", BITMAP_PATH);
+	sprintf(buffer, "cd %s && ffmpeg -i %%d.bmp -pix_fmt rgb24 output.gif && gifsicle --delay=5 --loop output.gif > pred.gif && rm output.gif", SAVE_PATH);
 	system(buffer);
 }

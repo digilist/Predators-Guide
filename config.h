@@ -3,7 +3,7 @@
 
 extern const int PRINTING_DISABLED;
 
-extern const char BITMAP_PATH[]; // Pfad zu Ordner für Bitmap-Erzeugung
+extern const char SAVE_PATH[]; // Pfad zu Ordner für Bitmap-Erzeugung
 extern const char BITMAP_FILENAME[]; // Dateiname für Bitmap (muss ein %d für die Nummer des Schrittes enthalten)
 
 extern const int MAP_WIDTH; // Breite der Karte
@@ -18,5 +18,7 @@ extern const float BIRTH_RATE[]; // Geburtenrate
 extern const float DYING_RATE[]; // Sterbewahrscheinlichkeit: 1/x
 
 extern const int MAX_PLANT_AGE; // max. Alter einer Pflanze
+
+int randomInt(int low, int high);
 
 #endif
