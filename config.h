@@ -11,6 +11,10 @@ extern const int MAP_HEIGHT; // Höhe der Karte
 extern const int SCALE_FACTOR; // Skalierungsfaktor für die Bildausgabe
 extern const int MAX_SIMULATION_STEPS; // Anzahl der Simulationsschritte -1 für unendlich
 
+const float MAP_FILL_RATE;
+const float PREDATOR_RATE;
+const float PREY_RATE;
+
 extern const int ELDERLY_AGE[]; // Sterbelter
 extern const int PREDATOR_MAX_STARVE_TIME; // max. Jahre Hunger für Predator
 

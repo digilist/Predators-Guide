@@ -1,13 +1,12 @@
 #include <stdio.h>
 
-#include "runtime_configuration.h"
 #include "result.h"
 #include "config.h"
 
-void saveResult(struct RuntimeConfiguration *config, struct SimulationResult *result)
+void saveResult(struct SimulationResult *result)
 {
 	char filename[255];
-	sprintf(filename, "%s/%dx%d-%.0f-%.0f-%.0f.csv", SAVE_PATH, config->mapWidth, config->mapHeight, config->mapFillRate * 100, config->predatorRate * 100, config->preyRate * 100);
+	sprintf(filename, "%s/steps.csv", SAVE_PATH);
 
 	FILE *file = fopen(filename, "a+");
 

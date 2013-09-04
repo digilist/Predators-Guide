@@ -36,16 +36,8 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		struct RuntimeConfiguration *config = malloc(sizeof(struct RuntimeConfiguration));
-
-		config->mapWidth= 100;
-		config->mapHeight = 100;
-		config->mapFillRate = 0.3;
-		config->predatorRate = 0.3;
-		config->preyRate = 0.7;
-
-		struct SimulationResult *result = runSimulation(config);
-		saveResult(config, result);
+		struct SimulationResult *result = runSimulation();
+		saveResult(result);
 	}
 
 	//createVideo();

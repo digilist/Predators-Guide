@@ -1,5 +1,4 @@
 #include "config.h"
-#include "runtime_configuration.h"
 
 #ifndef MAP_H_INCLUDED
 #define MAP_H_INCLUDED
@@ -51,7 +50,7 @@ struct Field
 
 };
 
-struct Map* initMap(struct RuntimeConfiguration *config);
+struct Map* initMap();
 
 void printToBitmap(struct Map *map, int step);
 

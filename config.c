@@ -11,7 +11,11 @@ const char BITMAP_FILENAME[] = "%d.bmp"; // Dateiname für Bitmap (muss ein %d f
 const int MAP_WIDTH = 100; // Breite der Karte
 const int MAP_HEIGHT = 100; // Höhe der Karte
 const int SCALE_FACTOR = 10; // Skalierungsfaktor für die Bildausgabe
-const int MAX_SIMULATION_STEPS = 1000; // Anzahl der Simulationsschritte -1 für unendlich
+const int MAX_SIMULATION_STEPS = 50; // Anzahl der Simulationsschritte -1 für unendlich
+
+const float MAP_FILL_RATE = 0.3;
+const float PREDATOR_RATE = 0.3;
+const float PREY_RATE = 0.7;
 
 const int ELDERLY_AGE[NUMBER_OF_POPULATION_TYPES] = {
 	0, // EMPTY

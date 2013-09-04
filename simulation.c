@@ -42,9 +42,9 @@ struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y, enum
  * führt eine einzelne Simulation mit der gegebenen Konfiguration aus
  *
  */
-struct SimulationResult* runSimulation(struct RuntimeConfiguration *config)
+struct SimulationResult* runSimulation()
 {
-	struct Map *map = initMap(config);
+	struct Map *map = initMap();
 
 	int i = 0;
 

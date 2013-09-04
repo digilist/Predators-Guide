@@ -15,6 +15,6 @@ struct SimulationResult
 	struct StepResult *firstStepResult;
 };
 
-void saveResult(struct RuntimeConfiguration *config, struct SimulationResult *result);
+void saveResult(struct SimulationResult *result);
 
 #endif

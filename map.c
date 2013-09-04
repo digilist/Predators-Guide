@@ -12,13 +12,13 @@ char abstractBitmapFilepath[256];
  * 	Initialisiert das Spielfeld mit der angebenen Breite und Höhe
  *
  */
-struct Map* initMap(struct RuntimeConfiguration *config)
+struct Map* initMap()
 {
 	sprintf(abstractBitmapFilepath, "%s%s", SAVE_PATH, BITMAP_FILENAME);
 
 	struct Map *map = malloc(sizeof(struct Map));
-	map->width = config->mapWidth;
-	map->height = config->mapHeight;
+	map->width = MAP_WIDTH;
+	map->height = MAP_HEIGHT;
 	map->fields = malloc(sizeof(struct Field) * map->width * map->height);
 
 	printf("Initializing a %dx%d field\n", map->width, map->height);
@@ -27,8 +27,8 @@ struct Map* initMap(struct RuntimeConfiguration *config)
 	for (int i = 0; i < NUMBER_OF_POPULATION_TYPES; i++)
 		counter[i] = 0;
 
-	int fillRate = config->mapFillRate * 100;
-	int predatorRate = config->predatorRate * 100;
+	int fillRate = MAP_FILL_RATE * 100;
+	int predatorRate = PREDATOR_RATE * 100;
 
 	for (int i = 0; i < map->width; i++)
 	{
