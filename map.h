@@ -53,7 +53,7 @@ struct Field
 
 struct Map* initMap(struct RuntimeConfiguration *config);
 
-void printToBitmap(struct Map *map, char* filename);
+void printToBitmap(struct Map *map, int step);
 
 struct Field* getField(struct Map *map, int x, int y);
 

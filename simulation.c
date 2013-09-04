@@ -67,6 +67,7 @@ struct SimulationResult* runSimulation(struct RuntimeConfiguration *config)
 
 	while (1)
 	{
+		printToBitmap(map, i);
 		i++;
 		printf("Simulation Step %d", i);
 

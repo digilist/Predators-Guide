@@ -1,7 +1,7 @@
 #ifndef CONFIG_H_INCLUDED
 #define CONFIG_H_INCLUDED
 
-extern const int PRINTING_DISABLED;
+extern const int PRINTING_ENABLED;
 
 extern const char SAVE_PATH[]; // Pfad zu Ordner für Bitmap-Erzeugung
 extern const char BITMAP_FILENAME[]; // Dateiname für Bitmap (muss ein %d für die Nummer des Schrittes enthalten)

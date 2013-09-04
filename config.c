@@ -3,14 +3,14 @@
 #include "config.h"
 #include "map.h"
 
-const int PRINTING_DISABLED = 1;
+const int PRINTING_ENABLED = 1;
 
 const char SAVE_PATH[] = "/tmp/pred/"; // Pfad zu Ordner für Bitmap-Erzeugung mit abschließendem /
 const char BITMAP_FILENAME[] = "%d.bmp"; // Dateiname für Bitmap (muss ein %d für die Nummer des Schrittes enthalten)
 
 const int MAP_WIDTH = 100; // Breite der Karte
 const int MAP_HEIGHT = 100; // Höhe der Karte
-const int SCALE_FACTOR = 1; // Skalierungsfaktor für die Bildausgabe
+const int SCALE_FACTOR = 10; // Skalierungsfaktor für die Bildausgabe
 const int MAX_SIMULATION_STEPS = 1000; // Anzahl der Simulationsschritte -1 für unendlich
 
 const int ELDERLY_AGE[NUMBER_OF_POPULATION_TYPES] = {

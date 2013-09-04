@@ -6,12 +6,16 @@
 #include "simulation.h"
 #include "bmp.h"
 
+char abstractBitmapFilepath[256];
+
 /**
  * 	Initialisiert das Spielfeld mit der angebenen Breite und Höhe
  *
  */
 struct Map* initMap(struct RuntimeConfiguration *config)
 {
+	sprintf(abstractBitmapFilepath, "%s%s", SAVE_PATH, BITMAP_FILENAME);
+
 	struct Map *map = malloc(sizeof(struct Map));
 	map->width = config->mapWidth;
 	map->height = config->mapHeight;
@@ -68,10 +72,13 @@ struct Map* initMap(struct RuntimeConfiguration *config)
  * gibt das Spielfeld in eine Bitmap mit dem angebenen Dateipfad aus
  *
  */
-void printToBitmap(struct Map *map, char* filepath)
+void printToBitmap(struct Map *map, int step)
 {
-	if(PRINTING_DISABLED)
+	if(!PRINTING_ENABLED)
 		return;
+
+	char filepath[256];
+	sprintf(filepath, abstractBitmapFilepath, step);
 
 	int width = map->width;
 	int height = map->height;

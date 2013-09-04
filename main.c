@@ -30,107 +30,23 @@ int main(int argc, char* argv[])
 	if(argc == 2 && strcmp(argv[1], "-p") == 0)
 		parallel = 1;
 
-	struct RuntimeConfigurationList *next = generateRuntimes();
-	int i = 0;
-	while(next != 0)
+	if(parallel)
 	{
-		struct RuntimeConfiguration *config = next->config;
-		printf("Karte %dx%d, %0.f%% Füllung, %0.f%% Predators, %0.f%% Prey\n",
-				config->mapWidth,
-				config->mapHeight,
-				config->mapFillRate * 100,
-				config->predatorRate * 100,
-				config->preyRate * 100
-		);
-
-		if(parallel)
-		{
-			// TODO parallel running
-		}
-		else
-		{
-			struct SimulationResult *result = runSimulation(config);
-			saveResult(config, result);
-		}
-
-		i++;
-		next = next->next;
+		// TODO parallel running
 	}
+	else
+	{
+		struct RuntimeConfiguration *config = malloc(sizeof(struct RuntimeConfiguration));
 
-//	initFilesystem();
-//
-//	char buffer[256];
-//	char abstractBitmapFilepath[256];
-//
-//	sprintf(abstractBitmapFilepath, "%s%s", BITMAP_PATH, BITMAP_FILENAME);
-//
-//	struct Map *map = initMap(MAP_WIDTH, MAP_HEIGHT); // for scaling must be square
-//
-//	sprintf(buffer, abstractBitmapFilepath, 0);
-//	printToBitmap(map, buffer);
-//
-//	int i = 1;
-//
-//	struct StepResult *current;
-//	struct StepResult *first;
-//	struct StepResult *temp_step_result;
-//
-//	int predator_trend;
-//	int prey_trend;
-//	int previous_predator_amount;
-//	int previous_prey_amount;
-//
-//	while (1)
-//	{
-//		printf("Simulation Step %d\n", i);
-//		if (i == 1) {
-//			first = simulationStep(map, i);
-//			current = first;
-//			temp_step_result = first;
-//
-//			previous_predator_amount = first->amount_predators;
-//			previous_prey_amount = first->amount_prey;
-//		} else {
-//			temp_step_result = simulationStep(map, i);
-//
-//			if (i > 2) { // there can be no turning point in the first two rounds
-//
-//				// check on turning point
-//				if (((((previous_predator_amount - temp_step_result->amount_predators) < 0) != predator_trend)
-//					&& (previous_predator_amount - temp_step_result->amount_predators) != 0)
-//					|| ((((previous_prey_amount - temp_step_result->amount_prey) < 0) != prey_trend)
-//					&& (previous_prey_amount - temp_step_result->amount_prey) != 0)) {
-//
-//					// attach result set to chained list
-//					current->next = temp_step_result;
-//					current = current->next;
-//
-//					printf("\nTURNING POINT %d/%d\n\n", previous_predator_amount, previous_prey_amount);
-//				}
-//			}
-//
-//			predator_trend = (previous_predator_amount - temp_step_result->amount_predators) < 0;
-//			prey_trend = (previous_prey_amount - temp_step_result->amount_prey) < 0;
-//			previous_predator_amount = temp_step_result->amount_predators;
-//			previous_prey_amount = temp_step_result->amount_prey;
-//
-//		}
-//
-//
-//		if (temp_step_result->amount_predators == 0 || temp_step_result->amount_prey == 0) {
-//			printf("One species died!\n");
-//			break;
-//		}
-//		printf("%d/%d - ", temp_step_result->amount_predators, temp_step_result->amount_prey);
-//
-//
-//		sprintf(buffer, abstractBitmapFilepath, i);
-//		printToBitmap(map, buffer);
-//
-//		i++;
-//		if (i > MAX_SIMULATION_STEPS)
-//			break;
-//	}
+		config->mapWidth= 100;
+		config->mapHeight = 100;
+		config->mapFillRate = 0.3;
+		config->predatorRate = 0.3;
+		config->preyRate = 0.7;
+
+		struct SimulationResult *result = runSimulation(config);
+		saveResult(config, result);
+	}
 
 	//createVideo();
 
