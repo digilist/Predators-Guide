@@ -26,6 +26,8 @@ struct Coordinates* getRandomMovementOrder(struct Map *map);
 
 int checkForPrey(struct Map *map, struct Field **field);
 
+int findPrey(struct Map *map, struct Field **field, int *previousDirection);
+
 int moveAnimal(struct Map *map, struct Field **field);
 
 void createChild(struct Map *map, struct Field *field);
@@ -37,6 +39,14 @@ int shouldDie(struct Field *field);
 struct Field* getRandomEmptyNeighboringField(struct Map *map, struct Field *field);
 
 struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y, enum Direction direction);
+
+
+struct FieldList
+{
+	int *previousDirection;
+	struct Field **field;
+	struct FieldList *next;
+};
 
 /**
  * führt eine einzelne Simulation mit der gegebenen Konfiguration aus
@@ -269,9 +279,150 @@ int checkForPrey(struct Map *map, struct Field **field)
 
 				return 1;
 			}
+
 		}
+
+		for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++) // alle umliegenden Felder prüfen
+				{
+					struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, i);
+					if(findPrey(map, neighboringField, i) == 1)
+					{
+						moveFieldToOtherField(field, neighboringField);
+
+						return 1;
+					}
+				}
 	}
 
+	return 0;
+}
+
+int findPrey(struct Map *map, struct Field **field, int previousDirection)
+{
+	printf("Check");
+	struct FieldList *tempFieldList;
+	struct FieldList *current;
+	struct FieldList *first;
+	if(previousDirection == 1)
+		{
+			struct Field **neighboringField = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, previousDirection);
+			current->field = *neighboringField;
+			current->previousDirection = previousDirection;
+			first = current;
+			if(neighboringField->populationType == PREY)
+			{
+				return 1;
+			}
+		}
+	else if(previousDirection < 4)
+	{
+		struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, previousDirection);
+		tempFieldList->field = neighboringField;
+		tempFieldList->previousDirection = previousDirection;
+		current->next = tempFieldList;
+		current = current->next;
+		if(neighboringField->populationType == PREY)
+		{
+			return 1;
+		}
+	}
+	if(previousDirection == 4)
+	{
+		struct Field *neighboringField1 = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, previousDirection);
+		struct Field *neighboringField2 = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, 0);
+		struct Field *neighboringField3 = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, 2);
+		tempFieldList->field = neighboringField1;
+		tempFieldList->previousDirection = previousDirection;
+		current->next = tempFieldList;
+		current = current->next;
+		tempFieldList->field = neighboringField2;
+		tempFieldList->previousDirection = 0;
+		current->next = tempFieldList;
+		current = current->next;
+		tempFieldList->field = neighboringField3;
+		tempFieldList->previousDirection = 2;
+		current->next = tempFieldList;
+		current = current->next;
+		if(neighboringField1->populationType == PREY || neighboringField2->populationType == PREY || neighboringField3->populationType == PREY)
+		{
+			return 1;
+		}
+	}
+	if(previousDirection == 5)
+		{
+			struct Field *neighboringField1 = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, previousDirection);
+			struct Field *neighboringField2 = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, 0);
+			struct Field *neighboringField3 = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, 3);
+			tempFieldList->field = neighboringField1;
+			tempFieldList->previousDirection = previousDirection;
+			current->next = tempFieldList;
+			current = current->next;
+			tempFieldList->field = neighboringField2;
+			tempFieldList->previousDirection = 0;
+			current->next = tempFieldList;
+			current = current->next;
+			tempFieldList->field = neighboringField3;
+			tempFieldList->previousDirection = 3;
+			current->next = tempFieldList;
+			current = current->next;
+			if(neighboringField1->populationType == PREY || neighboringField2->populationType == PREY || neighboringField3->populationType == PREY)
+			{
+				return 1;
+			}
+		}
+	if(previousDirection == 6)
+		{
+			struct Field *neighboringField1 = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, previousDirection);
+			struct Field *neighboringField2 = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, 3);
+			struct Field *neighboringField3 = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, 1);
+			tempFieldList->field = neighboringField1;
+			tempFieldList->previousDirection = previousDirection;
+			current->next = tempFieldList;
+			current = current->next;
+			tempFieldList->field = neighboringField2;
+			tempFieldList->previousDirection = 3;
+			current->next = tempFieldList;
+			current = current->next;
+			tempFieldList->field = neighboringField3;
+			tempFieldList->previousDirection = 1;
+			current->next = tempFieldList;
+			current = current->next;
+			if(neighboringField1->populationType == PREY || neighboringField2->populationType == PREY || neighboringField3->populationType == PREY)
+			{
+				return 1;
+			}
+		}
+	if(previousDirection == 7)
+		{
+			struct Field *neighboringField1 = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, previousDirection);
+			struct Field *neighboringField2 = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, 2);
+			struct Field *neighboringField3 = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, 1);
+			tempFieldList->field = neighboringField1;
+			tempFieldList->previousDirection = previousDirection;
+			current->next = tempFieldList;
+			current = current->next;
+			tempFieldList->field = neighboringField2;
+			tempFieldList->previousDirection = 2;
+			current->next = tempFieldList;
+			current = current->next;
+			tempFieldList->field = neighboringField3;
+			tempFieldList->previousDirection = 1;
+			current->next = tempFieldList;
+			current = current->next;
+			if(neighboringField1->populationType == PREY || neighboringField2->populationType == PREY || neighboringField3->populationType == PREY)
+			{
+				return 1;
+			}
+		}
+	current = first;
+	for(int i = 0; i<16; i++)
+	{
+		if(findPrey(map, current->field, current->previousDirection) == 1)
+		{
+			return 1;
+		}
+		current = current->next;
+	}
 	return 0;
 }
 /**
@@ -372,3 +523,5 @@ struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y, enum
 
 	return getField(map, x, y);
 }
+
+
