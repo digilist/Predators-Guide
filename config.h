@@ -17,7 +17,7 @@ const float PREY_RATE;
 const float PLANT_RATE;
 
 extern const int ELDERLY_AGE[]; // Sterbelter
-extern const int PREDATOR_MAX_STARVE_TIME; // max. Jahre Hunger für Predator
+extern const int MAX_ENERGY; // max. Jahre Hunger für Predator
 
 extern const float BIRTH_RATE[]; // Geburtenrate
 extern const float DYING_RATE[]; // Sterbewahrscheinlichkeit: 1/x

@@ -157,17 +157,14 @@ struct StepResult* simulationStep(struct Map *map, int step)
 			}
 			else
 			{
-				// Predator ohne Beute verhungern irgendwann
-				if (field->populationType == PREDATOR)
+				// Tiere ohne Beute verhungern irgendwann
+				if (field->energy <= 0)
 				{
-					if (field->starveTime > PREDATOR_MAX_STARVE_TIME)
-					{
-						resetField(field);
-					}
-					else
-					{
-						field->starveTime++;
-					}
+					resetField(field);
+				}
+				else
+				{
+					field->energy--;
 				}
 			}
 
@@ -273,7 +270,7 @@ int checkForFood(struct Map *map, struct Field **field)
 			if (neighboringField->populationType == PREY) // Pflanzenfresser frisst Pflanze
 			{
 				moveFieldToOtherField(field, neighboringField);
-				(*field)->starveTime = 0;
+				(*field)->energy = MAX_ENERGY;
 
 				return 1;
 			}
@@ -283,6 +280,7 @@ int checkForFood(struct Map *map, struct Field **field)
 			if (neighboringField->containsPlant) // Pflanzenfresser frisst Pflanze
 			{
 				moveFieldToOtherField(field, neighboringField);
+				(*field)->energy = MAX_ENERGY;
 				(*field)->containsPlant = 0;
 
 				return 1;
@@ -432,6 +430,7 @@ void createChild(struct Map *map, struct Field *field)
 	if (neighboringField)
 	{
 		neighboringField->populationType = field->populationType;
+		neighboringField->energy = MAX_ENERGY;
 		return;
 	}
 }
@@ -442,7 +441,7 @@ void createChild(struct Map *map, struct Field *field)
  */
 struct Field* getRandomNeighboringField(struct Map *map, struct Field *field)
 {
-	enum Direction direction = rand() % 4;
+	enum Direction direction = rand() % NUMBER_OF_DIRECTIONS;
 	struct Field *neighboringField = getNeighboringFieldInDirection(map, field->x, field->y, direction);
 
 	return neighboringField;
@@ -456,7 +455,7 @@ struct Field* getRandomNeighboringField(struct Map *map, struct Field *field)
 struct Field* getRandomEmptyNeighboringField(struct Map *map, struct Field *field)
 {
 	enum Direction direction = rand() % NUMBER_OF_DIRECTIONS;
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++)
 	{
 		struct Field *neighboringField = getNeighboringFieldInDirection(map, field->x, field->y, direction);
 		if (neighboringField->populationType == EMPTY)

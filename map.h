@@ -43,7 +43,7 @@ struct Field
 	// wenn populationType == EMPTY muss keines dieser Werte gesetzt werden
 	int age; // erreicht das Lebewesen ein bestimmtes Alter, bringt es ein neues Lebewesen auf die Welt
 
-	int starveTime; // Anzahl der Zeiteinheiten, die der Räuber hungern muss (nur für Räuber)
+	int energy; // Anzahl der Zeiteinheiten, die der Räuber hungern muss (nur für Räuber)
 					// nach x ZE stirbt der Räuber
 
 	int lastStep; // speichert, wann das Lebewesen seinen letzten Schritt vollzogen hat (um doppelte Schritte nach Bewegungen zu vermeiden)

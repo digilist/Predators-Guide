@@ -108,8 +108,8 @@ void printToBitmap(struct Map *map, int step)
 				pixelMap[index] = 255; // predetaors are red
 			else if (field->populationType == PREY)
 				pixelMap[index + 2] = 255; // preys are blue
-			else if (field->containsPlant)
-				pixelMap[index + 1] = 255;
+//			else if (field->containsPlant)
+//				pixelMap[index + 1] = 255;
 			else if(field->populationType == EMPTY)
 			{
 				pixelMap[index] = 255;
@@ -173,7 +173,7 @@ void copyFieldToOtherField(struct Field *sourceField, struct Field *targetField)
 {
 	targetField->populationType = sourceField->populationType;
 	targetField->age = sourceField->age;
-	targetField->starveTime = sourceField->starveTime;
+	targetField->energy = sourceField->energy;
 	targetField->lastStep = sourceField->lastStep;
 }
 
@@ -197,7 +197,7 @@ void resetField(struct Field *field)
 {
 	field->populationType = EMPTY;
 	field->age = 0;
-	field->starveTime = 0;
+	field->energy = 0;
 	field->lastStep = 0;
 }
 
