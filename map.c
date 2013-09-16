@@ -108,8 +108,8 @@ void printToBitmap(struct Map *map, int step)
 				pixelMap[index] = 255; // predetaors are red
 			else if (field->populationType == PREY)
 				pixelMap[index + 2] = 255; // preys are blue
-//			else if (field->containsPlant)
-//				pixelMap[index + 1] = 255;
+			else if (field->containsPlant)
+				pixelMap[index + 1] = 255;
 			else if(field->populationType == EMPTY)
 			{
 				pixelMap[index] = 255;

@@ -128,20 +128,29 @@ struct StepResult* simulationStep(struct Map *map, int step)
 	{
 		struct Field *field = getField(map, movements[i].x, movements[i].y);
 
-		if (field->populationType != EMPTY && field->lastStep < step) // 2. Bedinung zur Absicherung, damit
-																	  // kein Tier in einer Runde mehrfach
-																	  // Aktionen ausführt (z.B. durch Bewegung)
+		if (field->populationType != EMPTY)
 		{
-			field->lastStep++;
-			int moved = 0;
-
 			// suche nach Beute
-			moved = checkForFood(map, &field); // moved ^= Beute gefunden
-
-			// Bewegung
-			if (!moved)
+			if(checkForFood(map, &field))
 			{
-				moved = moveAnimal(map, &field);
+				field->lastStep++;
+			}
+		}
+	}
+
+	movements = getRandomMovementOrder(map);
+	for (int i = 0; i < map->width * map->height; i++)
+	{
+		struct Field *field = getField(map, movements[i].x, movements[i].y);
+
+		if (field->populationType != EMPTY)
+		{
+			struct Field *field = getField(map, movements[i].x, movements[i].y);
+
+			// hat sich dieses Tier diese Runde schon einmal bewegt? (vorher durchs Fressen oder durch eine Bewegung auf dieses Feld)
+			if(field->lastStep < step)
+			{
+				moveAnimal(map, &field);
 			}
 
 			// überprüfe Alter auf Schwangerschaft
@@ -288,16 +297,16 @@ int checkForFood(struct Map *map, struct Field **field)
 		}
 	}
 
-	for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++) // alle umliegenden Felder prüfen
-	{
-		struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, i);
-		if (findFood(map, neighboringField, i, 0, (*field)->populationType) == 1)
-		{
-			moveFieldToOtherField(field, neighboringField);
-
-			return 1;
-		}
-	}
+//	for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++) // alle umliegenden Felder prüfen
+//	{
+//		struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, i);
+//		if (findFood(map, neighboringField, i, 0, (*field)->populationType) == 1)
+//		{
+//			moveFieldToOtherField(field, neighboringField);
+//
+//			return 1;
+//		}
+//	}
 
 	return 0;
 }

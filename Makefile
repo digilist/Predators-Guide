@@ -13,7 +13,11 @@ seriell: predators.out
 	./predators.out
 
 valgrind: predators.out
-		valgrind --leak-check=yes ./predators.out
+	make compile
+	valgrind --leak-check=yes ./predators.out
+
+plot: predators.out
+	gnuplot pred.plot
 
 .PHONY: clean
 clean:
