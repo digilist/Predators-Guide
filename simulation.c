@@ -26,7 +26,7 @@ struct Coordinates* getRandomMovementOrder(struct Map *map);
 
 int checkForPrey(struct Map *map, struct Field **field);
 
-int findPrey(struct Map *map, struct Field *field, int previousDirection, int layer);
+int findPrey(struct Map *map, struct Field *field, enum Direction previousDirection, int layer);
 
 int moveAnimal(struct Map *map, struct Field **field);
 
@@ -288,14 +288,10 @@ int checkForPrey(struct Map *map, struct Field **field)
 	return 0;
 }
 
-int findPrey(struct Map *map, struct Field *field, int previousDirection, int layer)
+int findPrey(struct Map *map, struct Field *field, enum Direction previousDirection, int layer)
 {
-	if(layer == 1)
-	{
-		printf("Check");
-	}
 	struct Field *FieldList[17];
-	int FieldListDirection[17];
+	enum Direction FieldListDirection[17];
 	int count = 0;
 	if(previousDirection < UP_LEFT)
 	{
@@ -308,7 +304,7 @@ int findPrey(struct Map *map, struct Field *field, int previousDirection, int la
 			return 1;
 		}
 	}
-	if(previousDirection == UP_LEFT)
+	else if(previousDirection == UP_LEFT)
 	{
 		struct Field *neighboringField1 = getNeighboringFieldInDirection(map, (field)->x, (field)->y, previousDirection);
 		FieldList[count] = neighboringField1;
@@ -327,7 +323,7 @@ int findPrey(struct Map *map, struct Field *field, int previousDirection, int la
 			return 1;
 		}
 	}
-	if(previousDirection == UP_RIGHT)
+	else if(previousDirection == UP_RIGHT)
 		{
 			struct Field *neighboringField1 = getNeighboringFieldInDirection(map, (field)->x, (field)->y, previousDirection);
 			FieldList[count] = neighboringField1;
@@ -346,7 +342,7 @@ int findPrey(struct Map *map, struct Field *field, int previousDirection, int la
 				return 1;
 			}
 		}
-	if(previousDirection == DOWN_LEFT)
+	else if(previousDirection == DOWN_LEFT)
 		{
 			struct Field *neighboringField1 = getNeighboringFieldInDirection(map, (field)->x, (field)->y, previousDirection);
 			FieldList[count] = neighboringField1;
@@ -365,7 +361,7 @@ int findPrey(struct Map *map, struct Field *field, int previousDirection, int la
 				return 1;
 			}
 		}
-	if(previousDirection == DOWN_RIGHT)
+	else if(previousDirection == DOWN_RIGHT)
 		{
 			struct Field *neighboringField1 = getNeighboringFieldInDirection(map, (field)->x, (field)->y, previousDirection);
 			FieldList[count] = neighboringField1;
@@ -386,7 +382,7 @@ int findPrey(struct Map *map, struct Field *field, int previousDirection, int la
 		}
 	if(layer == 0)
 	{
-		for(int i = 0; i < 16; i++)
+		for(int i = 0; i < count; i++)
 		{
 			if(findPrey(map, FieldList[i], FieldListDirection[i], 1) == 1)
 			{
