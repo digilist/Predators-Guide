@@ -9,12 +9,12 @@
  */
 struct Map
 {
-	int width;
-	int height;
+	unsigned int width;
+	unsigned int height;
 
 	struct Field *fields; // Belegung der einzelnen Felder des Spielfelds
-	int numberOfPredators; // Anzahl Räuber aktuell
-	int numberOfPrey; // Anzahl Beute aktuell
+	unsigned int numberOfPredators; // Anzahl Räuber aktuell
+	unsigned int numberOfPrey; // Anzahl Beute aktuell
 };
 
 /**
@@ -36,19 +36,21 @@ enum PopulationType
  */
 struct Field
 {
-	int x, y; // Position des Feldes
+	 // Position des Feldes
+	unsigned int x : 16;
+	unsigned int y : 16;
 
-	enum PopulationType populationType;
+	enum PopulationType populationType : 2;
+
+	unsigned int lastStep : 16; // speichert, wann das Lebewesen seinen letzten Schritt vollzogen hat (um doppelte Schritte nach Bewegungen zu vermeiden)
 
 	// wenn populationType == EMPTY muss keines dieser Werte gesetzt werden
-	int age; // erreicht das Lebewesen ein bestimmtes Alter, bringt es ein neues Lebewesen auf die Welt
+	unsigned int age : 8; // erreicht das Lebewesen ein bestimmtes Alter, bringt es ein neues Lebewesen auf die Welt
 
-	int energy; // Anzahl der Zeiteinheiten, die der Räuber hungern muss (nur für Räuber)
-					// nach x ZE stirbt der Räuber
+	unsigned int energy : 8; // Anzahl der Zeiteinheiten, die das Tier hungern musste
 
-	int lastStep; // speichert, wann das Lebewesen seinen letzten Schritt vollzogen hat (um doppelte Schritte nach Bewegungen zu vermeiden)
 
-	int containsPlant; // speicher, ob auf diesem Feld auch pflanzen existieren
+	unsigned int containsPlant : 1; // speicher, ob auf diesem Feld auch pflanzen existieren
 
 };
 

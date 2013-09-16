@@ -3,9 +3,9 @@
 
 struct StepResult
 {
-	int amount_predators;
-	int amount_prey;
-	int current_step;
+	unsigned int amount_predators;
+	unsigned int amount_prey;
+	unsigned int current_step;
 	struct StepResult *next;
 };
 

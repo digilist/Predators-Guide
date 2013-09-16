@@ -147,12 +147,15 @@ void printToBitmap(struct Map *map, int step)
 		}
 
 		write_bmp(filepath, scaledWidth, scaledHeight, scaledPixelMap);
+
+		free(scaledPixelMap);
 	}
 	else
 	{
 		write_bmp(filepath, width, height, pixelMap);
 	}
 
+	free(pixelMap);
 
 }
 
@@ -199,5 +202,6 @@ void resetField(struct Field *field)
 	field->age = 0;
 	field->energy = 0;
 	field->lastStep = 0;
+	field->containsPlant = 0;
 }
 
