@@ -29,6 +29,8 @@ struct Map* initMap()
 
 	int fillRate = MAP_FILL_RATE * 100;
 	int predatorRate = PREDATOR_RATE * 100;
+	int preyRate = PREY_RATE * 100;
+	int plantRate = PLANT_RATE * 100;
 
 	for (int i = 0; i < map->width; i++)
 	{
@@ -44,10 +46,15 @@ struct Map* initMap()
 				{
 					pop = PREDATOR;
 				}
-				else
+				else if(randomInt(0, 100) <= preyRate)
 				{
 					pop = PREY;
 				}
+			}
+
+			if(randomInt(0, 100) <= plantRate)
+			{
+				field->containsPlant= 1;
 			}
 
 			counter[pop]++;
@@ -101,6 +108,8 @@ void printToBitmap(struct Map *map, int step)
 				pixelMap[index] = 255; // predetaors are red
 			else if (field->populationType == PREY)
 				pixelMap[index + 2] = 255; // preys are blue
+			else if (field->containsPlant)
+				pixelMap[index + 1] = 255;
 			else if(field->populationType == EMPTY)
 			{
 				pixelMap[index] = 255;

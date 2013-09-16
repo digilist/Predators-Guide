@@ -25,7 +25,7 @@ struct StepResult* calculateStepResultset(struct Map *map, int step);
 
 struct Coordinates* getRandomMovementOrder(struct Map *map);
 
-int checkForPrey(struct Map *map, struct Field **field);
+int checkForFood(struct Map *map, struct Field **field);
 
 int findPrey(struct Map *map, struct Field *field, enum Direction previousDirection, int layer);
 
@@ -136,7 +136,7 @@ struct StepResult* simulationStep(struct Map *map, int step)
 			int moved = 0;
 
 			// suche nach Beute
-			moved = checkForPrey(map, &field); // moved ^= Beute gefunden
+			moved = checkForFood(map, &field); // moved ^= Beute gefunden
 
 			// Bewegung
 			if (!moved)
@@ -173,6 +173,13 @@ struct StepResult* simulationStep(struct Map *map, int step)
 
 			if (field->populationType != EMPTY) // wenn nicht gestorben
 				field->age++;
+		}
+		else if(field->populationType == EMPTY)
+		{
+			if(randomInt(0, 100) <= (PLANT_RATE * 100))
+			{
+				field->containsPlant = 1;
+			}
 		}
 	}
 
@@ -255,14 +262,14 @@ struct Coordinates* getRandomMovementOrder(struct Map *map)
  *
  * wurde Beute gefunden und gefressen, wird 1 zurückgegeben andernfalls 0
  */
-int checkForPrey(struct Map *map, struct Field **field)
+int checkForFood(struct Map *map, struct Field **field)
 {
-	if ((*field)->populationType == PREDATOR)
+	for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++) // alle umliegenden Felder prüfen
 	{
-		for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++) // alle umliegenden Felder prüfen
-		{
-			struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, i);
+		struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, i);
 
+		if((*field)->populationType == PREDATOR)
+		{
 			if (neighboringField->populationType == PREY) // Pflanzenfresser frisst Pflanze
 			{
 				moveFieldToOtherField(field, neighboringField);
@@ -270,18 +277,27 @@ int checkForPrey(struct Map *map, struct Field **field)
 
 				return 1;
 			}
-
 		}
-
-		for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++) // alle umliegenden Felder prüfen
+		else if((*field)->populationType == PREY)
 		{
-			struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, i);
-			if (findPrey(map, neighboringField, i, 0) == 1)
+			if (neighboringField->containsPlant) // Pflanzenfresser frisst Pflanze
 			{
 				moveFieldToOtherField(field, neighboringField);
+				(*field)->containsPlant = 0;
 
 				return 1;
 			}
+		}
+	}
+
+	for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++) // alle umliegenden Felder prüfen
+	{
+		struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, i);
+		if (findPrey(map, neighboringField, i, 0) == 1)
+		{
+			moveFieldToOtherField(field, neighboringField);
+
+			return 1;
 		}
 	}
 

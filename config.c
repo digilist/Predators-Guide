@@ -14,8 +14,9 @@ const int SCALE_FACTOR = 10; // Skalierungsfaktor für die Bildausgabe
 const int MAX_SIMULATION_STEPS = 500; // Anzahl der Simulationsschritte -1 für unendlich
 
 const float MAP_FILL_RATE = 0.3;
-const float PREDATOR_RATE = 0.3;
-const float PREY_RATE = 0.7;
+const float PREDATOR_RATE = 0.3; // an der MAP_FILL_RATE
+const float PREY_RATE = 0.7; // an der MAP_FILL_RATE
+const float PLANT_RATE = 0.2; // an der Gesamtmap
 
 const int ELDERLY_AGE[NUMBER_OF_POPULATION_TYPES] = {
 	0, // EMPTY

@@ -48,6 +48,8 @@ struct Field
 
 	int lastStep; // speichert, wann das Lebewesen seinen letzten Schritt vollzogen hat (um doppelte Schritte nach Bewegungen zu vermeiden)
 
+	int containsPlant; // speicher, ob auf diesem Feld auch pflanzen existieren
+
 };
 
 struct Map* initMap();
