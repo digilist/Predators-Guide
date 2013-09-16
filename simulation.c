@@ -27,7 +27,7 @@ struct Coordinates* getRandomMovementOrder(struct Map *map);
 
 int checkForFood(struct Map *map, struct Field **field);
 
-int findPrey(struct Map *map, struct Field *field, enum Direction previousDirection, int layer);
+int findFood(struct Map *map, struct Field *field, enum Direction previousDirection, int layer, enum PopulationType popuType);
 
 int moveAnimal(struct Map *map, struct Field **field);
 
@@ -293,7 +293,7 @@ int checkForFood(struct Map *map, struct Field **field)
 	for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++) // alle umliegenden Felder prüfen
 	{
 		struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, i);
-		if (findPrey(map, neighboringField, i, 0) == 1)
+		if (findFood(map, neighboringField, i, 0, (*field)->populationType) == 1)
 		{
 			moveFieldToOtherField(field, neighboringField);
 
@@ -304,7 +304,7 @@ int checkForFood(struct Map *map, struct Field **field)
 	return 0;
 }
 
-int findPrey(struct Map *map, struct Field *field, enum Direction previousDirection, int layer)
+int findFood(struct Map *map, struct Field *field, enum Direction previousDirection, int layer, enum PopulationType popuType)
 {
 	struct Field *fieldList[17];
 	enum Direction fieldListDirection[17];
@@ -316,10 +316,6 @@ int findPrey(struct Map *map, struct Field *field, enum Direction previousDirect
 		fieldList[count] = neighboringField;
 		fieldListDirection[count] = previousDirection;
 		count++;
-		if (neighboringField->populationType == PREY)
-		{
-			return 1;
-		}
 	}
 	else if (previousDirection == UP_LEFT)
 	{
@@ -337,11 +333,6 @@ int findPrey(struct Map *map, struct Field *field, enum Direction previousDirect
 		fieldList[count] = neighboringField3;
 		fieldListDirection[count] = LEFT;
 		count++;
-
-		if (neighboringField1->populationType == PREY || neighboringField2->populationType == PREY || neighboringField3->populationType == PREY)
-		{
-			return 1;
-		}
 	}
 	else if (previousDirection == UP_RIGHT)
 	{
@@ -359,11 +350,6 @@ int findPrey(struct Map *map, struct Field *field, enum Direction previousDirect
 		fieldList[count] = neighboringField3;
 		fieldListDirection[count] = RIGHT;
 		count++;
-
-		if (neighboringField1->populationType == PREY || neighboringField2->populationType == PREY || neighboringField3->populationType == PREY)
-		{
-			return 1;
-		}
 	}
 	else if (previousDirection == DOWN_LEFT)
 	{
@@ -381,11 +367,6 @@ int findPrey(struct Map *map, struct Field *field, enum Direction previousDirect
 		fieldList[count] = neighboringField3;
 		fieldListDirection[count] = LEFT;
 		count++;
-
-		if (neighboringField1->populationType == PREY || neighboringField2->populationType == PREY || neighboringField3->populationType == PREY)
-		{
-			return 1;
-		}
 	}
 	else if (previousDirection == DOWN_RIGHT)
 	{
@@ -403,23 +384,25 @@ int findPrey(struct Map *map, struct Field *field, enum Direction previousDirect
 		fieldList[count] = neighboringField3;
 		fieldListDirection[count] = RIGHT;
 		count++;
-
-		if (neighboringField1->populationType == PREY || neighboringField2->populationType == PREY || neighboringField3->populationType == PREY)
-		{
-			return 1;
-		}
 	}
-
-	if (layer == 0)
-	{
 		for (int i = 0; i < count; i++)
 		{
-			if (findPrey(map, fieldList[i], fieldListDirection[i], 1) == 1)
+			if(fieldList[i]->populationType == PREY && popuType == PREDATOR)
 			{
 				return 1;
 			}
+			else if(fieldList[i]->containsPlant && popuType == PREY)
+			{
+				return 1;
+			}
+			else if(layer == 0)
+			{
+				if (findFood(map, fieldList[i], fieldListDirection[i], 1, popuType) == 1)
+				{
+					return 1;
+				}
+			}
 		}
-	}
 	return 0;
 }
 /**
