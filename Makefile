@@ -1,16 +1,19 @@
 CC = /usr/bin/gcc
+MPICC = /usr/bin/mpicc
 CFLAGS = -Wall -lm -std=c99 -g -o predators.out *.c
 
-all: compile seriell 
+export LD_LIBRARY_PATH=/usr/lib/openmpi/:$LD_LIBRARY_PATH
+
+all: compile mpi
 
 compile: main.c
-	$(CC) $(CFLAGS)
+	$(MPICC) $(CFLAGS)
 
-parallel: predators.out
-	./predators.out -p
-
-seriell: predators.out
+run: compile
 	./predators.out
+
+mpi: compile
+	mpiexec -n 1 ./predators.out
 
 valgrind: predators.out
 	make compile

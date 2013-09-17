@@ -9,12 +9,24 @@
  */
 struct Map
 {
-	unsigned int width;
-	unsigned int height;
+	unsigned int width : 16;
+	unsigned int height : 16;
 
 	struct Field *fields; // Belegung der einzelnen Felder des Spielfelds
 	unsigned int numberOfPredators; // Anzahl Räuber aktuell
 	unsigned int numberOfPrey; // Anzahl Beute aktuell
+};
+
+/**
+ * represents a segment of the map
+ */
+struct Segment {
+	unsigned int x1 : 16;
+	unsigned int x2 : 16;
+	unsigned int y1 : 16;
+	unsigned int y2 : 16;
+	unsigned int width : 16;
+	unsigned int height : 16;
 };
 
 /**
@@ -40,7 +52,7 @@ struct Field
 	unsigned int x : 16;
 	unsigned int y : 16;
 
-	enum PopulationType populationType : 2;
+	enum PopulationType population_type : 2;
 
 	unsigned int lastStep : 16; // speichert, wann das Lebewesen seinen letzten Schritt vollzogen hat (um doppelte Schritte nach Bewegungen zu vermeiden)
 
@@ -50,20 +62,22 @@ struct Field
 	unsigned int energy : 8; // Anzahl der Zeiteinheiten, die das Tier hungern musste
 
 
-	unsigned int containsPlant : 1; // speicher, ob auf diesem Feld auch pflanzen existieren
+	unsigned int contains_plant : 1; // speicher, ob auf diesem Feld auch pflanzen existieren
 
 };
 
-struct Map* initMap();
+struct Map* init_map();
+
+void init_population(struct Map *map, struct Segment *segment);
 
 void printToBitmap(struct Map *map, int step);
 
-struct Field* getField(struct Map *map, int x, int y);
+struct Field* get_field(struct Map *map, int x, int y);
 
 void copyFieldToOtherField(struct Field *sourceField, struct Field *targetField);
 
 void moveFieldToOtherField(struct Field **sourceField, struct Field *targetField);
 
-void resetField(struct Field *field);
+void reset_field(struct Field *field);
 
 #endif

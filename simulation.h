@@ -4,8 +4,8 @@
 #ifndef SIMULATION_H_INCLUDED
 #define SIMULATION_H_INCLUDED
 
-struct SimulationResult* runSimulation();
+void simulation_step(struct Map *map, struct Segment *segment, int step);
 
-struct StepResult* simulationStep(struct Map *map, int i);
+struct StepResult* calculate_step_result(struct Map *map, struct Segment *segment, int step);
 
 #endif

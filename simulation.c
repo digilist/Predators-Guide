@@ -21,9 +21,9 @@ struct Coordinates
 	int y;
 };
 
-struct StepResult* calculateStepResultset(struct Map *map, int step);
+struct StepResult* calculate_step_result(struct Map *map, struct Segment *segment, int step);
 
-struct Coordinates* getRandomMovementOrder(struct Map *map);
+struct Coordinates* get_random_movement_order(struct Map *map, struct Segment *segment);
 
 int checkForFood(struct Map *map, struct Field **field);
 
@@ -45,90 +45,135 @@ struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y, enum
  * führt eine einzelne Simulation mit der gegebenen Konfiguration aus
  *
  */
-struct SimulationResult* runSimulation()
-{
-	struct Map *map = initMap();
-
-	int i = 0;
-	struct StepResult *current;
-	struct StepResult *first;
-	struct StepResult *temp_step_result;
-
-//	int predator_trend;
-//	int prey_trend;
-//	int previous_predator_amount;
-//	int previous_prey_amount;
-
-	// init first result
-	first = calculateStepResultset(map, 0);
-	current = first;
-	temp_step_result = first;
-
-//	previous_predator_amount = first->amount_predators;
-//	previous_prey_amount = first->amount_prey;
-
-	while (1)
-	{
-		printToBitmap(map, i);
-		i++;
-		printf("Simulation Step %d", i);
-
-		temp_step_result = simulationStep(map, i);
-
-		if (i > 2)
-		{ // there can be no turning point in the first two rounds
-
-			// check on turning point
-//			if (((((previous_predator_amount - temp_step_result->amount_predators) < 0) != predator_trend)
-//					&& (previous_predator_amount - temp_step_result->amount_predators) != 0)
-//					|| ((((previous_prey_amount - temp_step_result->amount_prey) < 0) != prey_trend)
-//							&& (previous_prey_amount - temp_step_result->amount_prey) != 0))
-//			{
-
-				// attach result set to linked list
-				current->next = temp_step_result;
-				current = current->next;
-
-//				printf("\nTURNING POINT %d/%d\n\n", previous_predator_amount, previous_prey_amount);
-//			}
-		}
-
-//		predator_trend = (previous_predator_amount - temp_step_result->amount_predators) < 0;
-//		prey_trend = (previous_prey_amount - temp_step_result->amount_prey) < 0;
-//		previous_predator_amount = temp_step_result->amount_predators;
-//		previous_prey_amount = temp_step_result->amount_prey;
-
-		if (temp_step_result->amount_predators == 0 || temp_step_result->amount_prey == 0)
-		{
-			printf("\nOne species died!\n");
-			break;
-		}
-		printf(" - %d/%d\n", temp_step_result->amount_predators, temp_step_result->amount_prey);
-
-		if (i > MAX_SIMULATION_STEPS)
-			break;
-	}
-
-	struct SimulationResult *result = malloc(sizeof(struct SimulationResult));
-	result->simulationSteps = i;
-	result->firstStepResult = first;
-
-	return result;
-}
+//struct SimulationResult* run_simulation()
+//{
+//	struct Map *map = initMap();
+//
+//	int i = 0;
+//	struct StepResult *current;
+//	struct StepResult *first;
+//	struct StepResult *temp_step_result;
+//
+////	int predator_trend;
+////	int prey_trend;
+////	int previous_predator_amount;
+////	int previous_prey_amount;
+//
+//	// init first result
+//	first = calculateStepResultset(map, 0);
+//	current = first;
+//	temp_step_result = first;
+//
+////	previous_predator_amount = first->amount_predators;
+////	previous_prey_amount = first->amount_prey;
+//
+//	while (1)
+//	{
+//		printToBitmap(map, i);
+//		i++;
+//		printf("Simulation Step %d", i);
+//
+//		temp_step_result = simulation_step(map, i);
+//
+//		if (i > 2)
+//		{ // there can be no turning point in the first two rounds
+//
+//			// check on turning point
+////			if (((((previous_predator_amount - temp_step_result->amount_predators) < 0) != predator_trend)
+////					&& (previous_predator_amount - temp_step_result->amount_predators) != 0)
+////					|| ((((previous_prey_amount - temp_step_result->amount_prey) < 0) != prey_trend)
+////							&& (previous_prey_amount - temp_step_result->amount_prey) != 0))
+////			{
+//
+//				// attach result set to linked list
+//				current->next = temp_step_result;
+//				current = current->next;
+//
+////				printf("\nTURNING POINT %d/%d\n\n", previous_predator_amount, previous_prey_amount);
+////			}
+//		}
+//
+////		predator_trend = (previous_predator_amount - temp_step_result->amount_predators) < 0;
+////		prey_trend = (previous_prey_amount - temp_step_result->amount_prey) < 0;
+////		previous_predator_amount = temp_step_result->amount_predators;
+////		previous_prey_amount = temp_step_result->amount_prey;
+//
+//		if (temp_step_result->amount_predators == 0 || temp_step_result->amount_prey == 0)
+//		{
+//			printf("\nOne species died!\n");
+//			break;
+//		}
+//		printf(" - %d/%d\n", temp_step_result->amount_predators, temp_step_result->amount_prey);
+//
+//		if (i > MAX_SIMULATION_STEPS)
+//			break;
+//	}
+//
+//	struct SimulationResult *result = malloc(sizeof(struct SimulationResult));
+//	result->simulationSteps = i;
+//	result->firstStepResult = first;
+//
+//	return result;
+//}
+//
+//
+//struct SimulationResult* run_simulation()
+//{
+//	struct Map *map = init_map();
+//
+//	int i = 0;
+//	struct StepResult *current;
+//	struct StepResult *first;
+//	struct StepResult *temp_step_result;
+//
+//	// init first result
+//	first = calculateStepResultset(map, 0);
+//	current = first;
+//	temp_step_result = first;
+//
+//	while (1)
+//	{
+//		printToBitmap(map, i);
+//		i++;
+//
+//		printf("Simulation Step %d", i);
+//
+//		temp_step_result = simulation_step(map, i);
+//
+//		current->next = temp_step_result;
+//		current = current->next;
+//
+//		if (temp_step_result->amount_predators == 0 || temp_step_result->amount_prey == 0)
+//		{
+//			printf("\nOne species died!\n");
+//			break;
+//		}
+//		printf(" - %d/%d\n", temp_step_result->amount_predators, temp_step_result->amount_prey);
+//
+//		if (i > MAX_SIMULATION_STEPS)
+//			break;
+//	}
+//
+//	struct SimulationResult *result = malloc(sizeof(struct SimulationResult));
+//	result->simulationSteps = i;
+//	result->firstStepResult = first;
+//
+//	return result;
+//}
 
 /**
  * Simulation eines einzelnen Schrites auf dem Spielfeld
  *
  */
-struct StepResult* simulationStep(struct Map *map, int step)
+void simulation_step(struct Map *map, struct Segment *segment, int step)
 {
 	struct Coordinates *movements;
-	movements = getRandomMovementOrder(map);
-	for (int i = 0; i < map->width * map->height; i++)
+	movements = get_random_movement_order(map, segment);
+	for (int i = 0; i < segment->width * segment->height; i++)
 	{
-		struct Field *field = getField(map, movements[i].x, movements[i].y);
+		struct Field *field = get_field(map, movements[i].x, movements[i].y);
 
-		if (field->populationType != EMPTY)
+		if (field->population_type != EMPTY)
 		{
 			// suche nach Beute
 			if(checkForFood(map, &field))
@@ -139,14 +184,14 @@ struct StepResult* simulationStep(struct Map *map, int step)
 	}
 	free(movements);
 
-	movements = getRandomMovementOrder(map);
-	for (int i = 0; i < map->width * map->height; i++)
+	movements = get_random_movement_order(map, segment);
+	for (int i = 0; i < segment->width * segment->height; i++)
 	{
-		struct Field *field = getField(map, movements[i].x, movements[i].y);
+		struct Field *field = get_field(map, movements[i].x, movements[i].y);
 
-		if (field->populationType != EMPTY)
+		if (field->population_type != EMPTY)
 		{
-			struct Field *field = getField(map, movements[i].x, movements[i].y);
+			struct Field *field = get_field(map, movements[i].x, movements[i].y);
 
 			// hat sich dieses Tier diese Runde schon einmal bewegt? (vorher durchs Fressen oder durch eine Bewegung auf dieses Feld)
 			if(field->lastStep < step)
@@ -155,7 +200,7 @@ struct StepResult* simulationStep(struct Map *map, int step)
 			}
 
 			// überprüfe Alter auf Schwangerschaft
-			if (shouldGetChild(field->populationType))
+			if (shouldGetChild(field->population_type))
 			{
 				createChild(map, field);
 			}
@@ -163,14 +208,14 @@ struct StepResult* simulationStep(struct Map *map, int step)
 			// wenn das Tier zu alt ist, stirbt es
 			if (shouldDie(field))
 			{
-				resetField(field);
+				reset_field(field);
 			}
 			else
 			{
 				// Tiere ohne Beute verhungern irgendwann
 				if (field->energy <= 0)
 				{
-					resetField(field);
+					reset_field(field);
 				}
 				else
 				{
@@ -178,28 +223,26 @@ struct StepResult* simulationStep(struct Map *map, int step)
 				}
 			}
 
-			if (field->populationType != EMPTY) // wenn nicht gestorben
+			if (field->population_type != EMPTY) // wenn nicht gestorben
 				field->age++;
 		}
-		else if(field->populationType == EMPTY)
+		else if(field->population_type == EMPTY)
 		{
-			if(randomInt(0, 100) <= (PLANT_RATE * 100))
+			if(random_int(1, 100) <= (PLANT_RATE * 100))
 			{
-				field->containsPlant = 1;
+				field->contains_plant = 1;
 			}
 		}
 	}
 	free(movements);
-
-	return calculateStepResultset(map, step);
 }
 
 /**
  * berechnet das Ergebnis der Runde
- * (wieviele Pflanzen, Beute und Jäger gab es)
+ * (wieviele Pflanzen, Beute und Jäger gibt es danach es)
  *
  */
-struct StepResult* calculateStepResultset(struct Map *map, int step)
+struct StepResult* calculate_step_result(struct Map *map, struct Segment *segment, int step)
 {
 	// statistics
 	struct StepResult *resultset = malloc(sizeof(struct StepResult));
@@ -208,17 +251,17 @@ struct StepResult* calculateStepResultset(struct Map *map, int step)
 	resultset->current_step = step;
 	resultset->next = 0;
 
-	for (int x = 0; x < map->width; x++)
+	for (int x = segment->x1; x <= segment->x2; x++)
 	{
-		for (int y = 0; y < map->height; y++)
+		for (int y = segment->y1; y <= segment->y2; y++)
 		{
-			struct Field *field = getField(map, x, y);
+			struct Field *field = get_field(map, x, y);
 
-			if (field->populationType == PREY)
+			if (field->population_type == PREY)
 			{
 				resultset->amount_prey++;
 			}
-			else if (field->populationType == PREDATOR)
+			else if (field->population_type == PREDATOR)
 			{
 				resultset->amount_predators++;
 			}
@@ -234,8 +277,8 @@ struct StepResult* calculateStepResultset(struct Map *map, int step)
  */
 int shouldDie(struct Field *field)
 {
-	int dyingRate = DYING_RATE[field->populationType] * 100;
-	return field->age > ELDERLY_AGE[field->populationType] || (DYING_RATE[field->populationType] > 0 && randomInt(0, 100) <= dyingRate);
+	int dyingRate = DYING_RATE[field->population_type] * 100;
+	return field->age > ELDERLY_AGE[field->population_type] || (DYING_RATE[field->population_type] > 0 && random_int(1, 100) <= dyingRate);
 }
 
 /**
@@ -245,23 +288,22 @@ int shouldDie(struct Field *field)
 int shouldGetChild(int populationType)
 {
 	int birthRate = BIRTH_RATE[populationType] * 100;
-	return BIRTH_RATE[populationType] > 0 && randomInt(0, 100) <= birthRate;
+	return BIRTH_RATE[populationType] > 0 && random_int(1, 100) <= birthRate;
 }
 
 /**
  * bringe alle Felder in eine zufällige Reihenfolge,
- * um weniger ein flussähnliches Verhalten zu erzeugen,
- * wie es passieren würde, wenn man die Bewegungen immer
- * in der gleichen Reihenfolge ausführen würde
+ * um ein zufälligeres Verhalten bei den Bewegungen zu erzeugen
  */
-struct Coordinates* getRandomMovementOrder(struct Map *map)
+struct Coordinates* get_random_movement_order(struct Map *map, struct Segment *segment)
 {
-	struct Coordinates *movements = malloc(sizeof(struct Coordinates) * map->width * map->height);
+	int fields = segment->width * segment->height;
+	struct Coordinates *movements = malloc(sizeof(struct Coordinates) * fields);
 
 	int i = 0;
-	for (int x = 0; x < map->width; x++)
+	for (int x = segment->x1; x <= segment->x2; x++)
 	{
-		for (int y = 0; y < map->height; y++)
+		for (int y = segment->y1; y <= segment->y2; y++)
 		{
 			movements[i].x = x;
 			movements[i].y = y;
@@ -271,10 +313,9 @@ struct Coordinates* getRandomMovementOrder(struct Map *map)
 	}
 
 	// shuffle
-	int n = map->width * map->height;
-	for (i = n - 1; i >= 0; i--)
+	for (i = fields - 1; i >= 0; i--)
 	{
-		int j = rand() % n;
+		int j = rand() % fields;
 		struct Coordinates tmp = movements[j];
 		movements[j] = movements[i];
 		movements[i] = tmp;
@@ -295,9 +336,9 @@ int checkForFood(struct Map *map, struct Field **field)
 	{
 		struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, i);
 
-		if((*field)->populationType == PREDATOR)
+		if((*field)->population_type == PREDATOR)
 		{
-			if (neighboringField->populationType == PREY) // Pflanzenfresser frisst Pflanze
+			if (neighboringField->population_type == PREY) // Pflanzenfresser frisst Pflanze
 			{
 				moveFieldToOtherField(field, neighboringField);
 				(*field)->energy = MAX_ENERGY;
@@ -305,13 +346,13 @@ int checkForFood(struct Map *map, struct Field **field)
 				return 1;
 			}
 		}
-		else if((*field)->populationType == PREY)
+		else if((*field)->population_type == PREY)
 		{
-			if (neighboringField->containsPlant) // Pflanzenfresser frisst Pflanze
+			if (neighboringField->contains_plant) // Pflanzenfresser frisst Pflanze
 			{
 				moveFieldToOtherField(field, neighboringField);
 				(*field)->energy = MAX_ENERGY;
-				(*field)->containsPlant = 0;
+				(*field)->contains_plant = 0;
 
 				return 1;
 			}
@@ -321,7 +362,7 @@ int checkForFood(struct Map *map, struct Field **field)
 	{
 		struct Field *neighboringField = getNeighboringFieldInDirection(map, (*field)->x, (*field)->y, i);
 
-		if(findFood(map, neighboringField, i, 0, (*field)->populationType) == 1)
+		if(findFood(map, neighboringField, i, 0, (*field)->population_type) == 1)
 		{
 			moveFieldToOtherField(field, neighboringField);
 
@@ -415,7 +456,7 @@ int findFood(struct Map *map, struct Field *field, enum Direction previousDirect
 	}
 		for (int i = 0; i < count; i++)
 		{
-			if(fieldList[i]->populationType == PREY && popuType == PREDATOR)
+			if(fieldList[i]->population_type == PREY && popuType == PREDATOR)
 			{
 				return 1;
 			}
@@ -460,7 +501,7 @@ void createChild(struct Map *map, struct Field *field)
 	struct Field *neighboringField = getRandomEmptyNeighboringField(map, field);
 	if (neighboringField)
 	{
-		neighboringField->populationType = field->populationType;
+		neighboringField->population_type = field->population_type;
 		neighboringField->energy = MAX_ENERGY;
 		return;
 	}
@@ -489,7 +530,7 @@ struct Field* getRandomEmptyNeighboringField(struct Map *map, struct Field *fiel
 	for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++)
 	{
 		struct Field *neighboringField = getNeighboringFieldInDirection(map, field->x, field->y, direction);
-		if (neighboringField->populationType == EMPTY)
+		if (neighboringField->population_type == EMPTY)
 		{
 			return neighboringField;
 		}
@@ -531,6 +572,6 @@ struct Field* getNeighboringFieldInDirection(struct Map *map, int x, int y, enum
 	x %= map->width;
 	y %= map->height;
 
-	return getField(map, x, y);
+	return get_field(map, x, y);
 }
 

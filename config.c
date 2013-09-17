@@ -11,11 +11,11 @@ const char BITMAP_FILENAME[] = "%d.bmp"; // Dateiname für Bitmap (muss ein %d f
 const int MAP_WIDTH = 200; // Breite der Karte
 const int MAP_HEIGHT = 200; // Höhe der Karte
 const int SCALE_FACTOR = 1; // Skalierungsfaktor für die Bildausgabe
-const int MAX_SIMULATION_STEPS = 1000; // Anzahl der Simulationsschritte -1 für unendlich
+const int MAX_SIMULATION_STEPS = 100; // Anzahl der Simulationsschritte -1 für unendlich
 
 const float MAP_FILL_RATE = 0.3;
-const float PREDATOR_RATE = 0.3; // an der MAP_FILL_RATE
-const float PREY_RATE = 0.7; // an der MAP_FILL_RATE
+const float PREDATOR_RATE = 0.2; // an der MAP_FILL_RATE
+const float PREY_RATE = 0.8; // an der MAP_FILL_RATE
 const float PLANT_RATE = 0.2; // an der Gesamtmap
 
 const int ELDERLY_AGE[NUMBER_OF_POPULATION_TYPES] = {
@@ -38,7 +38,10 @@ const float BIRTH_RATE[NUMBER_OF_POPULATION_TYPES] = {
 	0.15 // PREDATOR
 };
 
-int randomInt(int low, int high)
+/**
+ * get a random number between (and including) low and high
+ */
+int random_int(int low, int high)
 {
 	return low + (double)rand () * (high - low + 1) / RAND_MAX;
 }

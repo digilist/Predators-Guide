@@ -5,47 +5,57 @@
 
 #include "config.h"
 #include "map.h"
-#include "simulation.h"
-#include "seriell.h"
+#include "run.h"
 #include "result.h"
 
-void initFilesystem();
-void createVideo();
+#include "parallel.h"
+
+void init_filesystem();
+void create_video();
 
 /*
  * Applikation zur Simmulation einer Räuber-Beute-Beziehung
  * in einem abgeschlossenen System.
  *
  */
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	srand((unsigned) time(0));
-	initFilesystem();
+//	initFilesystem();
 
-	printf("=======================\n");
-	printf("|  PREDATOR vs. PREY  |\n");
-	printf("=======================\n");
+	int rank = init_parallel(argc, argv);
+	int num_processes = get_num_processes();
 
-	int parallel = 0;
-	if(argc == 2 && strcmp(argv[1], "-p") == 0)
-		parallel = 1;
-
-	if(parallel)
+	if(rank == 0)
 	{
-		// TODO parallel running
+		printf("+------------------------------------------+\n");
+		printf("| PREDATOR vs. PREY                        |\n");
+		printf("+------------------------------------------+\n");
+		printf("| Running simulation with %02d processes     |\n", get_num_processes());
+		printf("+------------------------------------------+\n");
+	}
+
+	if(rank != 0 || num_processes == 1)
+	{
+		run_simulation();
+//		struct SimulationResult *result = run_simulation();
 	}
 	else
 	{
-		struct SimulationResult *result = runSimulation();
-		saveResult(result);
+
 	}
+
+
+	finish_parallel();
+
+//	saveResult(result);
 
 	//createVideo();
 
 	return 0;
 }
 
-void initFilesystem()
+void init_filesystem()
 {
 	char buffer[256];
 
@@ -56,7 +66,7 @@ void initFilesystem()
 	system(buffer);
 }
 
-void createVideo()
+void create_video()
 {
 	char buffer[256];
 

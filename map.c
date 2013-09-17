@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
+
 #include "config.h"
 #include "map.h"
 #include "simulation.h"
@@ -12,49 +14,57 @@ char abstractBitmapFilepath[256];
  * 	Initialisiert das Spielfeld mit der angebenen Breite und Höhe
  *
  */
-struct Map* initMap()
+struct Map* init_map()
 {
 	sprintf(abstractBitmapFilepath, "%s%s", SAVE_PATH, BITMAP_FILENAME);
 
 	struct Map *map = malloc(sizeof(struct Map));
 	map->width = MAP_WIDTH;
 	map->height = MAP_HEIGHT;
-	map->fields = malloc(sizeof(struct Field) * map->width * map->height);
 
+	map->fields = calloc(map->width * map->height, sizeof(struct Field));
+
+	return map;
+}
+
+/**
+ * create the initial population on our map
+ *
+ */
+void init_population(struct Map *map, struct Segment *segment)
+{
 	printf("Initializing a %dx%d field\n", map->width, map->height);
 
 	int counter[NUMBER_OF_POPULATION_TYPES];
 	for (int i = 0; i < NUMBER_OF_POPULATION_TYPES; i++)
 		counter[i] = 0;
+	int plants = 0;
 
-	int fillRate = MAP_FILL_RATE * 100;
-	int predatorRate = PREDATOR_RATE * 100;
-	int preyRate = PREY_RATE * 100;
-	int plantRate = PLANT_RATE * 100;
+	int predator_rate = (MAP_FILL_RATE * PREDATOR_RATE) * 100;
+	int prey_rate = (MAP_FILL_RATE * PREY_RATE) * 100;
+	int plant_rate = PLANT_RATE * 100;
 
-	for (int i = 0; i < map->width; i++)
+	for (int i = segment->x1; i <= segment->x2; i++)
 	{
-		for (int j = 0; j < map->height; j++)
+		for (int j = segment->y1; j <= segment->y2; j++)
 		{
-			struct Field *field = getField(map, i, j);
-			resetField(field);
+			struct Field *field = get_field(map, i, j);
+			reset_field(field);
 
 			int pop = EMPTY;
-			if(randomInt(0, 100) <= fillRate)
+			if(random_int(0, 99) < predator_rate)
 			{
-				if(randomInt(0, 100) <= predatorRate)
-				{
-					pop = PREDATOR;
-				}
-				else if(randomInt(0, 100) <= preyRate)
-				{
-					pop = PREY;
-				}
+				pop = PREDATOR;
+			}
+			else if(random_int(0, 99) < prey_rate)
+			{
+				pop = PREY;
 			}
 
-			if(randomInt(0, 100) <= plantRate)
+			if(random_int(0, 99) < plant_rate)
 			{
-				field->containsPlant= 1;
+				field->contains_plant= 1;
+				plants++;
 			}
 
 			counter[pop]++;
@@ -62,7 +72,7 @@ struct Map* initMap()
 			if(pop != EMPTY)
 				field->age = rand() % ELDERLY_AGE[pop]; // RANDOM age
 
-			field->populationType = pop; // RANDOM population Type
+			field->population_type = pop; // RANDOM population Type
 			field->x = i;
 			field->y = j;
 		}
@@ -70,9 +80,8 @@ struct Map* initMap()
 
 	printf("Spawned %d Prey\n", counter[PREY]);
 	printf("        %d Predators\n", counter[PREDATOR]);
+	printf("        %d Plants\n", plants);
 	printf("%d fields left Empty\n", counter[EMPTY]);
-
-	return map;
 }
 
 /**
@@ -97,20 +106,20 @@ void printToBitmap(struct Map *map, int step)
 	{
 		for (int j = 0; j < height; j++)
 		{
-			struct Field *field = getField(map, i, j);
+			struct Field *field = get_field(map, i, j);
 
 			int index = 3 * (j * width + i);
 			pixelMap[index] = 0; // r
 			pixelMap[index + 1] = 0; // g
 			pixelMap[index + 2] = 0; // b
 
-			if (field->populationType == PREDATOR)
+			if (field->population_type == PREDATOR)
 				pixelMap[index] = 255; // predetaors are red
-			else if (field->populationType == PREY)
+			else if (field->population_type == PREY)
 				pixelMap[index + 2] = 255; // preys are blue
-			else if (field->containsPlant)
+			else if (field->contains_plant)
 				pixelMap[index + 1] = 255;
-			else if(field->populationType == EMPTY)
+			else if(field->population_type == EMPTY)
 			{
 				pixelMap[index] = 255;
 				pixelMap[index + 1] = 255;
@@ -163,7 +172,7 @@ void printToBitmap(struct Map *map, int step)
  * Gibt ein einzelnes Feld auf der Karte zurück
  *
  */
-struct Field* getField(struct Map *map, int x, int y)
+struct Field* get_field(struct Map *map, int x, int y)
 {
 	return map->fields + (y * map->width + x);
 }
@@ -174,7 +183,7 @@ struct Field* getField(struct Map *map, int x, int y)
  */
 void copyFieldToOtherField(struct Field *sourceField, struct Field *targetField)
 {
-	targetField->populationType = sourceField->populationType;
+	targetField->population_type = sourceField->population_type;
 	targetField->age = sourceField->age;
 	targetField->energy = sourceField->energy;
 	targetField->lastStep = sourceField->lastStep;
@@ -187,7 +196,7 @@ void copyFieldToOtherField(struct Field *sourceField, struct Field *targetField)
 void moveFieldToOtherField(struct Field **sourceField, struct Field *targetField)
 {
 	copyFieldToOtherField(*sourceField, targetField);
-	resetField(*sourceField);
+	reset_field(*sourceField);
 
 	*sourceField = targetField;
 }
@@ -196,12 +205,12 @@ void moveFieldToOtherField(struct Field **sourceField, struct Field *targetField
  * setzt ein Feld zurück, so dass dort kein Lebewesen mehr existiert
  *
  */
-void resetField(struct Field *field)
+void reset_field(struct Field *field)
 {
-	field->populationType = EMPTY;
+	field->population_type = EMPTY;
 	field->age = 0;
 	field->energy = 0;
 	field->lastStep = 0;
-	field->containsPlant = 0;
+	field->contains_plant = 0;
 }
 
