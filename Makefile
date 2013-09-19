@@ -13,7 +13,7 @@ run: compile
 	./predators.out
 
 mpi: compile
-	mpiexec -n 1 ./predators.out
+	mpiexec -n 5 ./predators.out
 
 valgrind: predators.out
 	make compile

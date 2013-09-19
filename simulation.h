@@ -4,8 +4,18 @@
 #ifndef SIMULATION_H_INCLUDED
 #define SIMULATION_H_INCLUDED
 
-void simulation_step(struct Map *map, struct Segment *segment, int step);
+/**
+ * Richtungen in die sich ein Tier bewegen kann
+ *
+ * auf keinen Fall die Reihenfolge ändern!
+ */
+enum Direction
+{
+	UP, DOWN, LEFT, RIGHT, UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, NUMBER_OF_DIRECTIONS
+};
 
-struct StepResult* calculate_step_result(struct Map *map, struct Segment *segment, int step);
+void simulation_step(struct Map *map, int step);
+
+struct StepResult* calculate_step_result(struct Map *map, int step);
 
 #endif

@@ -11,10 +11,10 @@ struct StepResult
 
 struct SimulationResult
 {
-	int simulationSteps;
-	struct StepResult *firstStepResult;
+	int simulation_steps;
+	struct StepResult *first_step_result;
 };
 
-void saveResult(struct SimulationResult *result);
+void save_result(struct SimulationResult *result);
 
 #endif

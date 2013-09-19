@@ -1,7 +1,15 @@
+#include <mpi.h>
 #include "map.h"
+#include "simulation.h"
 
 #ifndef PARALLEL_H_INCLUDED
 #define PARALLEL_H_INCLUDED
+
+extern MPI_Datatype MPI_Struct_Field;
+
+enum MessageTag {
+	FIELD
+};
 
 int init_parallel(int argc, char *argv[]);
 void finish_parallel();
@@ -9,6 +17,12 @@ void finish_parallel();
 int get_rank();
 int get_num_processes();
 
-struct Segment* get_simulation_segment(struct Map *map);
+void init_segment(struct Map *map);
+struct Segment* get_segment();
+int get_dest_rank(enum Direction direction);
+
+void send_field(struct Field *field, enum Direction direction);
+void send_field_if_border(struct Field *field);
+void recv_field(struct Map *map);
 
 #endif

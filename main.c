@@ -24,8 +24,6 @@ int main(int argc, char *argv[])
 //	initFilesystem();
 
 	int rank = init_parallel(argc, argv);
-	int num_processes = get_num_processes();
-
 	if(rank == 0)
 	{
 		printf("+------------------------------------------+\n");
@@ -35,15 +33,8 @@ int main(int argc, char *argv[])
 		printf("+------------------------------------------+\n");
 	}
 
-	if(rank != 0 || num_processes == 1)
-	{
-		run_simulation();
+	run_simulation();
 //		struct SimulationResult *result = run_simulation();
-	}
-	else
-	{
-
-	}
 
 
 	finish_parallel();
