@@ -34,126 +34,6 @@ struct Field* get_random_empty_neighboring_field(struct Map *map, struct Field *
 struct Field* get_neighboring_field_in_direction(struct Map *map, int x, int y, enum Direction direction);
 
 /**
- * führt eine einzelne Simulation mit der gegebenen Konfiguration aus
- *
- */
-//struct SimulationResult* run_simulation()
-//{
-//	struct Map *map = initMap();
-//
-//	int i = 0;
-//	struct StepResult *current;
-//	struct StepResult *first;
-//	struct StepResult *temp_step_result;
-//
-////	int predator_trend;
-////	int prey_trend;
-////	int previous_predator_amount;
-////	int previous_prey_amount;
-//
-//	// init first result
-//	first = calculateStepResultset(map, 0);
-//	current = first;
-//	temp_step_result = first;
-//
-////	previous_predator_amount = first->amount_predators;
-////	previous_prey_amount = first->amount_prey;
-//
-//	while (1)
-//	{
-//		printToBitmap(map, i);
-//		i++;
-//		printf("Simulation Step %d", i);
-//
-//		temp_step_result = simulation_step(map, i);
-//
-//		if (i > 2)
-//		{ // there can be no turning point in the first two rounds
-//
-//			// check on turning point
-////			if (((((previous_predator_amount - temp_step_result->amount_predators) < 0) != predator_trend)
-////					&& (previous_predator_amount - temp_step_result->amount_predators) != 0)
-////					|| ((((previous_prey_amount - temp_step_result->amount_prey) < 0) != prey_trend)
-////							&& (previous_prey_amount - temp_step_result->amount_prey) != 0))
-////			{
-//
-//				// attach result set to linked list
-//				current->next = temp_step_result;
-//				current = current->next;
-//
-////				printf("\nTURNING POINT %d/%d\n\n", previous_predator_amount, previous_prey_amount);
-////			}
-//		}
-//
-////		predator_trend = (previous_predator_amount - temp_step_result->amount_predators) < 0;
-////		prey_trend = (previous_prey_amount - temp_step_result->amount_prey) < 0;
-////		previous_predator_amount = temp_step_result->amount_predators;
-////		previous_prey_amount = temp_step_result->amount_prey;
-//
-//		if (temp_step_result->amount_predators == 0 || temp_step_result->amount_prey == 0)
-//		{
-//			printf("\nOne species died!\n");
-//			break;
-//		}
-//		printf(" - %d/%d\n", temp_step_result->amount_predators, temp_step_result->amount_prey);
-//
-//		if (i > MAX_SIMULATION_STEPS)
-//			break;
-//	}
-//
-//	struct SimulationResult *result = malloc(sizeof(struct SimulationResult));
-//	result->simulationSteps = i;
-//	result->firstStepResult = first;
-//
-//	return result;
-//}
-//
-//
-//struct SimulationResult* run_simulation()
-//{
-//	struct Map *map = init_map();
-//
-//	int i = 0;
-//	struct StepResult *current;
-//	struct StepResult *first;
-//	struct StepResult *temp_step_result;
-//
-//	// init first result
-//	first = calculateStepResultset(map, 0);
-//	current = first;
-//	temp_step_result = first;
-//
-//	while (1)
-//	{
-//		printToBitmap(map, i);
-//		i++;
-//
-//		printf("Simulation Step %d", i);
-//
-//		temp_step_result = simulation_step(map, i);
-//
-//		current->next = temp_step_result;
-//		current = current->next;
-//
-//		if (temp_step_result->amount_predators == 0 || temp_step_result->amount_prey == 0)
-//		{
-//			printf("\nOne species died!\n");
-//			break;
-//		}
-//		printf(" - %d/%d\n", temp_step_result->amount_predators, temp_step_result->amount_prey);
-//
-//		if (i > MAX_SIMULATION_STEPS)
-//			break;
-//	}
-//
-//	struct SimulationResult *result = malloc(sizeof(struct SimulationResult));
-//	result->simulationSteps = i;
-//	result->firstStepResult = first;
-//
-//	return result;
-//}
-
-/**
  * Simulation eines einzelnen Schrites auf dem Spielfeld
  *
  */
@@ -166,6 +46,10 @@ void simulation_step(struct Map *map, int step)
 	for (int i = 0; i < segment->width * segment->height; i++)
 	{
 		struct Field *field = get_field(map, movements[i].x, movements[i].y);
+
+		// just check for incoming fields, if the current field is near a border
+		if(is_near_border(field))
+			probe_recv_field(map);
 
 		if (field->population_type != EMPTY)
 		{
@@ -182,6 +66,10 @@ void simulation_step(struct Map *map, int step)
 	for (int i = 0; i < segment->width * segment->height; i++)
 	{
 		struct Field *field = get_field(map, movements[i].x, movements[i].y);
+
+		// just check for incoming fields, if the current field is near a border
+		if(is_near_border(field))
+			probe_recv_field(map);
 
 		if (field->population_type != EMPTY)
 		{

@@ -3,6 +3,7 @@ MPICC = /usr/bin/mpicc
 CFLAGS = -Wall -lm -std=c99 -g -o predators.out *.c
 
 export LD_LIBRARY_PATH=/usr/lib/openmpi/:$LD_LIBRARY_PATH
+p=3
 
 all: compile mpi
 
@@ -13,7 +14,7 @@ run: compile
 	./predators.out
 
 mpi: compile
-	mpiexec -n 5 ./predators.out
+	mpiexec -n $(p) ./predators.out
 
 valgrind: predators.out
 	make compile

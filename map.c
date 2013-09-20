@@ -25,6 +25,16 @@ struct Map* init_map()
 
 	map->fields = calloc(map->width * map->height, sizeof(struct Field));
 
+	for (int i = 0; i < map->width; i++)
+	{
+		for (int j = 0; j < map->height; j++)
+		{
+			struct Field *field = get_field(map, i, j);
+			field->x = i;
+			field->y = j;
+		}
+	}
+
 	return map;
 }
 
@@ -35,7 +45,8 @@ struct Map* init_map()
 void init_population(struct Map *map)
 {
 	struct Segment *segment = get_segment();
-	printf("Initializing the segment %d:%dx%d:%d (%dx%d) on a %dx%d field\n", segment->x1, segment->x2, segment->y1, segment->y2, segment->width, segment->height, map->width, map->height);
+
+	output("Initializing the segment %d:%dx%d:%d (%dx%d) on a %dx%d field\n", segment->x1, segment->x2, segment->y1, segment->y2, segment->width, segment->height, map->width, map->height);
 
 	int counter[NUMBER_OF_POPULATION_TYPES];
 	for (int i = 0; i < NUMBER_OF_POPULATION_TYPES; i++)
@@ -51,7 +62,8 @@ void init_population(struct Map *map)
 		for (int j = segment->y1; j <= segment->y2; j++)
 		{
 			struct Field *field = get_field(map, i, j);
-			reset_field(field);
+			field->x = i;
+			field->y = j;
 
 			int pop = EMPTY;
 			if(random_int(0, 99) < predator_rate)
@@ -75,15 +87,15 @@ void init_population(struct Map *map)
 				field->age = rand() % ELDERLY_AGE[pop]; // RANDOM age
 
 			field->population_type = pop; // RANDOM population Type
-			field->x = i;
-			field->y = j;
 		}
 	}
 
-	printf("Spawned %d Prey\n", counter[PREY]);
-	printf("        %d Predators\n", counter[PREDATOR]);
-	printf("        %d Plants\n", plants);
-	printf("%d fields left Empty\n", counter[EMPTY]);
+	exchange_border_fields(map);
+
+	output("Spawned %d Prey\n", counter[PREY]);
+	output("        %d Predators\n", counter[PREDATOR]);
+	output("        %d Plants\n", plants);
+	output("%d fields left Empty\n", counter[EMPTY]);
 }
 
 /**
@@ -180,16 +192,17 @@ struct Field* get_field(struct Map *map, int x, int y)
 }
 
 /**
- * kopiert ein Feld auf ein anderes Feld
+ * copy a field into another field
+ * if the target field is a border field,
+ * it will notify the neighbored process
  *
  */
-void copy_field_to(struct Field *sourceField, struct Field *target_field)
+void copy_field_to(struct Field *source_field, struct Field *target_field)
 {
-	target_field->population_type = sourceField->population_type;
-	target_field->age = sourceField->age;
-	target_field->energy = sourceField->energy;
-	target_field->last_step = sourceField->last_step;
-
+	target_field->population_type = source_field->population_type;
+	target_field->age = source_field->age;
+	target_field->energy = source_field->energy;
+	target_field->last_step = source_field->last_step;
 	send_field_if_border(target_field);
 }
 
@@ -206,7 +219,7 @@ void move_field_to(struct Field **source_field, struct Field *target_field)
 }
 
 /**
- * setzt ein Feld zurück, so dass dort kein Lebewesen mehr existiert
+ * reset the field (remove the animal)
  *
  */
 void reset_field(struct Field *field)
@@ -218,6 +231,28 @@ void reset_field(struct Field *field)
 	field->contains_plant = 0;
 
 	send_field_if_border(field);
+}
+
+/**
+ * checks, whether the given field is in the near
+ * of our segment border
+ *
+ */
+int is_near_border(struct Field *field)
+{
+	int max_diff = 1;
+	struct Segment *segment = get_segment();
+
+	if((field->x - segment->x1) <= max_diff)
+		return 1;
+	if((segment->x1 - field->x) <= max_diff)
+		return 1;
+	if((field->y - segment->y1) <= max_diff)
+		return 1;
+	if((segment->y1 - field->y) <= max_diff)
+		return 1;
+
+	return 0;
 }
 
 /**
@@ -241,15 +276,15 @@ int is_border_field(struct Field *field)
 		return DOWN_RIGHT;
 
 	// horizontal
-	if(segment->x1 == field->x)
+	if(segment->x1 == field->x && field->y >= segment->y1 && field->y <= segment->y2)
 		return LEFT;
-	if(segment->x2 == field->x)
+	if(segment->x2 == field->x && field->y >= segment->y1 && field->y <= segment->y2)
 		return RIGHT;
 
 	// vertical
-	if(segment->y1 == field->y)
+	if(segment->y1 == field->y && field->x >= segment->x1 && field->x <= segment->x2)
 		return UP;
-	if(segment->y2 == field->y)
+	if(segment->y2 == field->y && field->x >= segment->x1 && field->x <= segment->x2)
 		return DOWN;
 
 	return -1;

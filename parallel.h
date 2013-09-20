@@ -11,6 +11,9 @@ enum MessageTag {
 	FIELD
 };
 
+extern int sent;
+extern int rcv;
+
 int init_parallel(int argc, char *argv[]);
 void finish_parallel();
 
@@ -24,5 +27,8 @@ int get_dest_rank(enum Direction direction);
 void send_field(struct Field *field, enum Direction direction);
 void send_field_if_border(struct Field *field);
 void recv_field(struct Map *map);
+void probe_recv_field(struct Map *map);
+
+void exchange_border_fields(struct Map *map);
 
 #endif

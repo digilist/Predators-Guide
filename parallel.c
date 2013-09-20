@@ -6,12 +6,15 @@
 #include "map.h"
 
 struct Segment *_segment = 0;
+int _rank = -1;
+int _num_proccesses;
 
-struct Field rcv_field;
+MPI_Status status;
 
 // extern
 MPI_Datatype MPI_Struct_Field;
 
+void _send_field(struct Field *field, int dest_rank);
 void _create_mpi_structs();
 int _get_offset(void* t_struct, void* element);
 
@@ -21,11 +24,11 @@ int _get_offset(void* t_struct, void* element);
  */
 int init_parallel(int argc, char *argv[])
 {
-    MPI_Init (&argc, &argv);
+	MPI_Init (&argc, &argv);
 
-    _create_mpi_structs();
+	_create_mpi_structs();
 
-    return get_rank();
+	return get_rank();
 }
 
 /**
@@ -34,10 +37,12 @@ int init_parallel(int argc, char *argv[])
  */
 int get_rank()
 {
-	int rank;
-	MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+	// häufigeres Abfragen hat Anscheinend Seiteneffekte?!
+	if(_rank > -1)
+		return _rank;
 
-	return rank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
+	return _rank;
 }
 
 /**
@@ -46,10 +51,11 @@ int get_rank()
  */
 int get_num_processes()
 {
-	int num_proccesses;
-	MPI_Comm_size(MPI_COMM_WORLD, &num_proccesses);
+	if(_num_proccesses > 0)
+		return _num_proccesses;
 
-	return num_proccesses;
+	MPI_Comm_size(MPI_COMM_WORLD, &_num_proccesses);
+	return _num_proccesses;
 }
 
 /**
@@ -80,7 +86,7 @@ void init_segment(struct Map *map)
 		}
 		else
 		{
-			printf("Process 0 isn't allowed to get a simulation segment!\n");
+			output("Process 0 isn't allowed to get a simulation segment!\n");
 			exit(1);
 		}
 	}
@@ -133,7 +139,7 @@ int get_dest_rank(enum Direction direction)
 	}
 	else
 	{
-		printf("failure\n");
+		output("failure\n");
 		exit(1);
 	}
 
@@ -146,6 +152,8 @@ int get_dest_rank(enum Direction direction)
 	return dest;
 }
 
+int sent;
+
 /**
  * send a field to another process
  *
@@ -155,24 +163,38 @@ void send_field(struct Field *field, enum Direction direction)
 	if(get_rank() == 0)
 		return;
 
+//	output("%d: send %dx%d : %d\n", get_rank(), field->x, field->y, direction);
+
 	if(direction == UP_LEFT || direction == UP_RIGHT || direction == UP)
 	{
-		MPI_Send(field, 1, MPI_Struct_Field, get_dest_rank(UP), FIELD, MPI_COMM_WORLD);
-	}
-
-	if(direction == UP_LEFT || direction == DOWN_LEFT || direction == LEFT)
-	{
-		MPI_Send(field, 1, MPI_Struct_Field, get_dest_rank(LEFT), FIELD, MPI_COMM_WORLD);
-	}
-
-	if(direction == UP_RIGHT || direction == DOWN_RIGHT || direction == RIGHT)
-	{
-		MPI_Send(field, 1, MPI_Struct_Field, get_dest_rank(RIGHT), FIELD, MPI_COMM_WORLD);
+		_send_field(field, get_dest_rank(UP));
 	}
 
 	if(direction == DOWN_LEFT || direction == DOWN_RIGHT || direction == DOWN)
 	{
-		MPI_Send(field, 1, MPI_Struct_Field, get_dest_rank(DOWN), FIELD, MPI_COMM_WORLD);
+		_send_field(field, get_dest_rank(DOWN));
+	}
+
+	if(direction == UP_LEFT || direction == DOWN_LEFT || direction == LEFT)
+	{
+		_send_field(field, get_dest_rank(LEFT));
+	}
+
+	if(direction == UP_RIGHT || direction == DOWN_RIGHT || direction == RIGHT)
+	{
+		_send_field(field, get_dest_rank(RIGHT));
+	}
+}
+
+/**
+ * helper function to send the field
+ */
+void _send_field(struct Field *field, int dest_rank)
+{
+	if(dest_rank != get_rank())
+	{
+		MPI_Send(field, 1, MPI_Struct_Field, dest_rank, FIELD, MPI_COMM_WORLD);
+		sent++;
 	}
 }
 
@@ -185,9 +207,12 @@ void send_field_if_border(struct Field *field)
 	int border = is_border_field(field);
 	if(border > -1)
 	{
+//		output("%d: send border %dx%d : %d\n", get_rank(), field->x, field->y, border);
 		send_field(field, border);
 	}
 }
+
+int rcv;
 
 /**
  * receive a field from another process
@@ -195,8 +220,72 @@ void send_field_if_border(struct Field *field)
  */
 void recv_field(struct Map *map)
 {
+	struct Field rcv_field;
 	MPI_Recv(&rcv_field, 1, MPI_Struct_Field, MPI_ANY_SOURCE, FIELD, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+//	output("%d: received %dx%d, border: %d\n", get_rank(), rcv_field.x, rcv_field.y, is_border_field(&rcv_field));
+
+	rcv++;
+
 	copy_field_to(&rcv_field, get_field(map, rcv_field.x, rcv_field.y));
+}
+
+/**
+ * probe if there is a message and receive if
+ */
+void probe_recv_field(struct Map *map)
+{
+	int fails = 0;
+	while(fails < 2)
+	{
+		int flag = 0;
+		MPI_Iprobe(MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &flag, &status);
+		if(flag)
+		{
+			recv_field(map);
+			fails = 0;
+		}
+		else
+		{
+			fails++;
+		}
+
+	}
+}
+
+/**
+ * send information about our border fields
+ * and receive information about the adjacent fields
+ */
+void exchange_border_fields(struct Map *map)
+{
+	if(get_rank() == 0 || get_num_processes() <= 2)
+		return;
+
+	struct Segment *segment = get_segment(map);
+
+	// TODO
+//	for(int x = segment->x1; x <= segment->x2; x++)
+//	{
+//
+//	}
+
+	for(int y = segment->y1; y <= segment->y2; y++)
+	{
+		// left border
+		send_field(get_field(map, segment->x1, y), LEFT);
+
+		// right border
+		send_field(get_field(map, segment->x2, y), RIGHT);
+	}
+
+	// and now receive from other processes
+	for(int y = segment->y1; y <= segment->y2; y++)
+	{
+		// receive one field per line, because there are two sides
+		recv_field(map);
+		recv_field(map);
+	}
 }
 
 /**

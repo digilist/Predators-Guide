@@ -74,12 +74,13 @@ void print_bitmap(struct Map *map, int step);
 
 struct Field* get_field(struct Map *map, int x, int y);
 
-void copy_field_to(struct Field *sourceField, struct Field *targetField);
+void copy_field_to(struct Field *source_field, struct Field *target_field);
 
-void move_field_to(struct Field **sourceField, struct Field *targetField);
+void move_field_to(struct Field **source_field, struct Field *target_field);
 
 void reset_field(struct Field *field);
 
+int is_near_border(struct Field *field);
 int is_border_field(struct Field *field);
 
 #endif

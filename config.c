@@ -1,17 +1,20 @@
 #include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 #include "config.h"
 #include "map.h"
+#include "parallel.h"
 
 const int PRINTING_ENABLED = 0;
 
 const char SAVE_PATH[] = "/tmp/pred/"; // Pfad zu Ordner für Bitmap-Erzeugung mit abschließendem /
 const char BITMAP_FILENAME[] = "%d.bmp"; // Dateiname für Bitmap (muss ein %d für die Nummer des Schrittes enthalten)
 
-const int MAP_WIDTH = 200; // Breite der Karte
-const int MAP_HEIGHT = 200; // Höhe der Karte
+const int MAP_WIDTH = 2000; // Breite der Karte
+const int MAP_HEIGHT = 2000; // Höhe der Karte
 const int SCALE_FACTOR = 1; // Skalierungsfaktor für die Bildausgabe
-const int MAX_SIMULATION_STEPS = 100; // Anzahl der Simulationsschritte -1 für unendlich
+const int MAX_SIMULATION_STEPS = 10; // Anzahl der Simulationsschritte -1 für unendlich
 
 const float MAP_FILL_RATE = 0.3;
 const float PREDATOR_RATE = 0.2; // an der MAP_FILL_RATE
@@ -41,7 +44,23 @@ const float BIRTH_RATE[NUMBER_OF_POPULATION_TYPES] = {
 /**
  * get a random number between (and including) low and high
  */
-int random_int(int low, int high)
+int random_int(const int low, const int high)
 {
 	return low + (double)rand () * (high - low + 1) / RAND_MAX;
+}
+
+/**
+ * get a random number between (and including) low and high
+ */
+void output(const char* format, ...)
+{
+	if(get_num_processes() > 1)
+		return;
+
+	va_list args;
+	va_start(args, format);
+
+	vprintf(format, args);
+
+	va_end(args);
 }
