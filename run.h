@@ -3,6 +3,6 @@
 #ifndef RUN_H_INCLUDED
 #define RUN_H_INCLUDED
 
-void run_simulation();
+struct SimulationResult* run_simulation();
 
 #endif

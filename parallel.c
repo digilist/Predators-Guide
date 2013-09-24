@@ -12,10 +12,17 @@ int _num_processes;
 MPI_Status status;
 
 // extern
-MPI_Datatype MPI_Struct_Field;
+MPI_Datatype	MPI_Struct_Field;
+MPI_Datatype	MPI_Struct_StepResult;
+MPI_Op			MPI_Op_Sum_StepResult;
 
 void _send_field(struct Field *field, int dest_rank);
-void _create_mpi_structs();
+
+void _create_mpi_types();
+void _create_mpi_struct_field();
+void _create_mpi_struct_step_result();
+void _create_mpi_op_sum_step_results();
+
 int _get_offset(void* t_struct, void* element);
 
 /**
@@ -26,7 +33,7 @@ int init_parallel(int argc, char *argv[])
 {
 	MPI_Init (&argc, &argv);
 
-	_create_mpi_structs();
+	_create_mpi_types();
 
 	return get_rank();
 }
@@ -293,8 +300,6 @@ void send_field_if_border(struct Field *field)
 	}
 }
 
-int rcv;
-
 /**
  * receive a field from another process
  *
@@ -303,10 +308,7 @@ void recv_field(struct Map *map)
 {
 	struct Field rcv_field;
 	MPI_Recv(&rcv_field, 1, MPI_Struct_Field, MPI_ANY_SOURCE, FIELD, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-//	output("%d: received %dx%d, border: %d\n", get_rank(), rcv_field.x, rcv_field.y, is_border_field(&rcv_field));
-
-	rcv++;
+	output("%d: received %dx%d, border: %d\n", get_rank(), rcv_field.x, rcv_field.y, is_border_field(&rcv_field));
 
 	copy_field_to(&rcv_field, get_field(map, rcv_field.x, rcv_field.y));
 }
@@ -373,20 +375,15 @@ void exchange_border_fields(struct Map *map)
  * create the structs, that will be used for MPI communication
  *
  */
-void _create_mpi_structs()
+void _create_mpi_types()
 {
-	/*
-	 * int MPI_Type_create_struct(
-		  int count,
-		  int array_of_blocklengths[],
-		  MPI_Aint array_of_displacements[],
-		  MPI_Datatype array_of_types[],
-		  MPI_Datatype *newtype
-		);
-	 *
-	 */
+	_create_mpi_struct_field();
+	_create_mpi_struct_step_result();
+	_create_mpi_op_sum_step_results();
+}
 
-	// struct Field
+void _create_mpi_struct_field()
+{
 	struct Field field;
 	MPI_Datatype types[7] = {MPI_UNSIGNED, MPI_UNSIGNED, MPI_INT, MPI_UNSIGNED, MPI_UNSIGNED, MPI_UNSIGNED, MPI_UNSIGNED};
 	int blocklen[7] = {1, 1, 1, 1, 1, 1, 1};
@@ -402,6 +399,35 @@ void _create_mpi_structs()
 
 	MPI_Type_create_struct(7, blocklen, disp, types, &MPI_Struct_Field);
 	MPI_Type_commit(&MPI_Struct_Field);
+}
+
+void _create_mpi_struct_step_result()
+{
+	struct StepResult step_result;
+	MPI_Datatype types[2] = {MPI_UNSIGNED, MPI_UNSIGNED}; // ignore current_step and *next
+	int blocklen[2] = {1, 1};
+	MPI_Aint disp[2] = {
+		_get_offset(&step_result, &step_result.amount_predators),
+		_get_offset(&step_result, &step_result.amount_prey),
+	};
+
+	MPI_Type_create_struct(2, blocklen, disp, types, &MPI_Struct_StepResult);
+	MPI_Type_commit(&MPI_Struct_StepResult);
+}
+
+void _create_mpi_op_sum_step_results()
+{
+	void sum(struct StepResult *in, struct StepResult *inout, int *len, MPI_Datatype *datatype) {
+		struct StepResult r;
+		for(int i = 0; i < *len; i++, in++, inout++)
+		{
+			r.amount_predators = in->amount_predators + inout->amount_predators;
+			r.amount_prey = in->amount_prey + inout->amount_prey;
+			*inout = r;
+		}
+	}
+
+	MPI_Op_create((MPI_User_function *)&sum, 1, &MPI_Op_Sum_StepResult);
 }
 
 int _get_offset(void* t_struct, void* element)

@@ -33,13 +33,13 @@ int main(int argc, char *argv[])
 		printf("+------------------------------------------+\n");
 	}
 
-	run_simulation();
-//		struct SimulationResult *result = run_simulation();
-
-
+	struct SimulationResult *result = run_simulation();
 	finish_parallel();
 
-//	saveResult(result);
+	if(rank == 0)
+	{
+		save_result(result);
+	}
 
 	//createVideo();
 

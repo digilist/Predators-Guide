@@ -5,14 +5,13 @@
 #ifndef PARALLEL_H_INCLUDED
 #define PARALLEL_H_INCLUDED
 
-extern MPI_Datatype MPI_Struct_Field;
+extern MPI_Datatype		MPI_Struct_Field;
+extern MPI_Datatype		MPI_Struct_StepResult;
+extern MPI_Op			MPI_Op_Sum_StepResult;
 
 enum MessageTag {
 	FIELD
 };
-
-extern int sent;
-extern int rcv;
 
 int init_parallel(int argc, char *argv[]);
 void finish_parallel();

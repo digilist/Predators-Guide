@@ -54,7 +54,7 @@ int random_int(const int low, const int high)
  */
 void output(const char* format, ...)
 {
-	if(get_num_processes() > 1)
+	if(1) // disable for debugging
 		return;
 
 	va_list args;
