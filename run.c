@@ -7,8 +7,6 @@
 #include "simulation.h"
 #include "parallel.h"
 
-void exchange_border_fields(struct Map *map);
-
 int num_processes;
 int rank;
 
@@ -52,6 +50,12 @@ void run_simulation()
 			}
 
 			free(step_result);
+		}
+		else
+		{
+			// i am the master
+
+			printf("Simulation Step %d\n", i);
 		}
 
 		MPI_Barrier(MPI_COMM_WORLD);

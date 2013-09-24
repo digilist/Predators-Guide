@@ -7,7 +7,7 @@
 
 struct Segment *_segment = 0;
 int _rank = -1;
-int _num_proccesses;
+int _num_processes;
 
 MPI_Status status;
 
@@ -51,11 +51,11 @@ int get_rank()
  */
 int get_num_processes()
 {
-	if(_num_proccesses > 0)
-		return _num_proccesses;
+	if(_num_processes > 0)
+		return _num_processes;
 
-	MPI_Comm_size(MPI_COMM_WORLD, &_num_proccesses);
-	return _num_proccesses;
+	MPI_Comm_size(MPI_COMM_WORLD, &_num_processes);
+	return _num_processes;
 }
 
 /**
@@ -91,8 +91,87 @@ void init_segment(struct Map *map)
 		}
 	}
 
-	int segment_width = map->width / num_simulators;
-	int segment_height = map->height;
+	int rows = 1;
+	int cols = 1;
+
+	if(num_simulators > 1)
+	{
+		// calculate number of segments, seperated in rows and columns
+		// this algorithm is based on prime factorization
+		int n = num_simulators;
+		int div = 2;
+		int primes[10]; // under the assumption, there are max. 10 prime factors in the domain of n / num_simulators
+		int p = 0; // highest index in primes
+
+		while(n % div != 0)
+			div++;
+
+		while(n % div == 0)
+		{
+			primes[p] = div;
+
+			if(n == div && (p == 0 || 1)) // primes and end
+			{
+				break;
+			}
+
+			n = n / div;
+			p++;
+
+			while(n % div != 0)
+				div++;
+		}
+
+		if (p == 0) // prime
+		{
+			primes[1] = 1;
+			p++;
+		}
+
+		for(int i = 1; i < p; i++)
+		{
+			primes[0] *= primes[i];
+			if(p - 1 > i)
+			{
+				primes[p - 1] *= primes[p];
+				p--;
+			}
+		}
+		primes[1] = primes[p];
+
+		cols = primes[0];
+		rows = primes[1];
+	}
+
+	if(rank == 1)
+	{
+		printf("Splitting Map into %d cols and %d rows\n", cols, rows);
+	}
+
+	int segment_width = map->width / cols;
+	int segment_height = map->height / rows;
+
+	// if cols not devide width make the last column a little bigger
+	if(map->width % cols != 0)
+	{
+		// but only if this process simulates a segment in the last column
+		if(rank % cols == 0)
+		{
+			segment_width += map->width - cols * segment_width;
+		}
+	}
+
+	// if rows not devide height make the last column a little bigger
+	if(map->height % rows != 0)
+	{
+		// but only if this process simulates a segment in the last row
+		if(rank > (rows-1) * cols)
+		{
+			segment_height += map->height - rows * segment_height;
+		}
+		// but only if this process simulates a last row in a column
+		printf("height\n");
+	}
 
 	_segment = malloc(sizeof(struct Segment));
 
@@ -102,6 +181,8 @@ void init_segment(struct Map *map)
 	_segment->y2 = segment_height - 1;
 	_segment->width = segment_width;
 	_segment->height = segment_height;
+
+	printf("Process %d Segment: %d:%d x %d:%d \n", get_rank(), _segment->x1, _segment->x2, _segment->y1, _segment->y2);
 }
 
 /**
