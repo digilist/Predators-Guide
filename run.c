@@ -28,12 +28,11 @@ struct SimulationResult* run_simulation()
 		init_population(map);
 	}
 
-	MPI_Barrier(MPI_COMM_WORLD);
-
 	int i = 0;
 	int died = 0;
 	while(i < MAX_SIMULATION_STEPS && !died)
 	{
+		MPI_Barrier(MPI_COMM_WORLD);
 		i++;
 
 		if(rank > 0 || num_processes == 1)
@@ -89,8 +88,6 @@ struct SimulationResult* run_simulation()
 				}
 			}
 		}
-
-		MPI_Barrier(MPI_COMM_WORLD);
 	}
 
 	return result;

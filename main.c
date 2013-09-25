@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 	struct SimulationResult *result = run_simulation();
 	finish_parallel();
 
-	if(rank == 0)
+	if(rank == 0 && result != 0)
 	{
 		save_result(result);
 	}

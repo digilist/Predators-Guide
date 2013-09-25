@@ -9,6 +9,10 @@ struct Segment *_segment = 0;
 int _rank = -1;
 int _num_processes;
 
+int _rows;
+int _cols;
+int _fields;
+
 MPI_Status status;
 
 // extern
@@ -98,8 +102,8 @@ void init_segment(struct Map *map)
 		}
 	}
 
-	int rows = 1;
-	int cols = 1;
+	_rows = 1;
+	_cols = 1;
 
 	if(num_simulators > 1)
 	{
@@ -146,34 +150,36 @@ void init_segment(struct Map *map)
 		}
 		primes[1] = primes[p];
 
-		cols = primes[0];
-		rows = primes[1];
+		_cols = primes[0];
+		_rows = primes[1];
 	}
 
 	if(rank == 1)
 	{
-		printf("Splitting Map into %d cols and %d rows\n", cols, rows);
+		printf("Splitting Map into %d cols and %d rows\n", _cols, _rows);
 	}
 
-	int segment_width = map->width / cols;
-	int segment_height = map->height / rows;
+	_fields = _cols * _rows;
+
+	int segment_width = map->width / _cols;
+	int segment_height = map->height / _rows;
 
 	_segment = malloc(sizeof(struct Segment));
 
-	_segment->x1 = ((rank-1) % cols) * segment_width;
+	_segment->x1 = ((rank-1) % _cols) * segment_width;
 	_segment->x2 = _segment->x1 + segment_width - 1;
-	_segment->y1 = ((rank-1) / cols) * segment_height;
+	_segment->y1 = ((rank-1) / _cols) * segment_height;
 	_segment->y2 = _segment->y1 + segment_height - 1;
 	_segment->width = segment_width;
 	_segment->height = segment_height;
 
 	// if cols not devide width make the last column a little bigger
-	if(map->width % cols != 0)
+	if(map->width % _cols != 0)
 	{
 		// but only if this process simulates a segment in the last column
-		if(rank % cols == 0)
+		if(rank % _cols == 0)
 		{
-			int diff = map->width - cols * segment_width;
+			int diff = map->width - _cols * segment_width;
 
 			_segment->width += diff;
 			_segment->x2 += diff;
@@ -181,12 +187,12 @@ void init_segment(struct Map *map)
 	}
 
 	// if rows not devide height make the last column a little bigger
-	if(map->height % rows != 0)
+	if(map->height % _rows != 0)
 	{
 		// but only if this process simulates a segment in the last row
-		if(rank > (rows-1) * cols)
+		if(rank > (_rows-1) * _cols)
 		{
-			int diff = map->height - rows * segment_height;
+			int diff = map->height - _rows * segment_height;
 
 			_segment->height += diff;
 			_segment->y2 += diff;
@@ -214,33 +220,41 @@ int get_dest_rank(enum Direction direction)
 	int dest = get_rank();
 	int num_processes = get_num_processes();
 
+	// to simplyfy calculations, will be added later
+	dest--;
+
+	int row_start = _cols * (dest / _cols);
+	int row_end = _cols * (dest / _cols) + _cols - 1;
+
 	if(direction == LEFT)
 	{
-		dest = dest -1;
+		dest--;
+		if(dest < row_start)
+			dest = row_start + _cols - 1;
 	}
 	else if(direction == RIGHT)
 	{
-		dest = dest + 1;
+		dest++;
+		if(dest > row_end)
+			dest = row_start;
 	}
 	else if(direction == UP)
 	{
-		// TODO currently sent to the current process
+		dest = (dest + _cols) % _fields;
 	}
 	else if(direction == DOWN)
 	{
-		// TODO currently sent to the current process
+		dest = dest - _cols;
+		if(dest < 0) // there is no modulo for negative numbers
+			dest = _fields + dest;
 	}
 	else
 	{
-		output("failure\n");
+		output("failure: invalid direction\n");
 		exit(1);
 	}
 
-	if(dest >= num_processes)
-		dest = 1;
-
-	if(dest == 0)
-		dest = num_processes - 1;
+	dest++;
 
 	return dest;
 }
@@ -255,8 +269,6 @@ void send_field(struct Field *field, enum Direction direction)
 {
 	if(get_rank() == 0)
 		return;
-
-//	output("%d: send %dx%d : %d\n", get_rank(), field->x, field->y, direction);
 
 	if(direction == UP_LEFT || direction == UP_RIGHT || direction == UP)
 	{
@@ -284,8 +296,9 @@ void send_field(struct Field *field, enum Direction direction)
  */
 void _send_field(struct Field *field, int dest_rank)
 {
-	if(dest_rank != get_rank())
+	if(dest_rank != get_rank()) // don't send to myself
 	{
+		output("%d: send %dx%d : %d\n", get_rank(), field->x, field->y, dest_rank);
 		MPI_Send(field, 1, MPI_Struct_Field, dest_rank, FIELD, MPI_COMM_WORLD);
 		sent++;
 	}
@@ -350,7 +363,7 @@ void exchange_border_fields(struct Map *map)
 	if(get_rank() == 0 || get_num_processes() <= 2)
 		return;
 
-	struct Segment *segment = get_segment(map);
+	struct Segment *segment = get_segment();
 
 	// TODO
 //	for(int x = segment->x1; x <= segment->x2; x++)
