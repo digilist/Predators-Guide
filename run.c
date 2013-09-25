@@ -28,6 +28,8 @@ struct SimulationResult* run_simulation()
 		init_population(map);
 	}
 
+	printf("%d: start simulation\n", get_rank());
+
 	int i = 0;
 	int died = 0;
 	while(i < MAX_SIMULATION_STEPS && !died)

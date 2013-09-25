@@ -212,51 +212,79 @@ struct Segment* get_segment()
 }
 
 /**
+ * returns the number of columns, the map is seperated devided in
+ */
+int get_cols()
+{
+	return _cols;
+}
+
+/**
+ * returns the number of rows, the map is seperated devided in
+ */
+int get_rows()
+{
+	return _rows;
+}
+
+/**
  * ensure, the destination rank is inside the simulation domain
  *
  */
-int get_dest_rank(enum Direction direction)
+int get_dest_rank(enum Direction direction, int origin)
 {
-	int dest = get_rank();
+	// origin will be transformed to destination
+
 	int num_processes = get_num_processes();
 
 	// to simplyfy calculations, will be added later
-	dest--;
+	origin--;
 
-	int row_start = _cols * (dest / _cols);
-	int row_end = _cols * (dest / _cols) + _cols - 1;
+	int row_start = _cols * (origin / _cols);
+	int row_end = _cols * (origin / _cols) + _cols - 1;
 
 	if(direction == LEFT)
 	{
-		dest--;
-		if(dest < row_start)
-			dest = row_start + _cols - 1;
+		origin--;
+		if(origin < row_start)
+			origin = row_start + _cols - 1;
 	}
 	else if(direction == RIGHT)
 	{
-		dest++;
-		if(dest > row_end)
-			dest = row_start;
+		origin++;
+		if(origin > row_end)
+			origin = row_start;
 	}
 	else if(direction == UP)
 	{
-		dest = (dest + _cols) % _fields;
+		origin = (origin + _cols) % _fields;
 	}
 	else if(direction == DOWN)
 	{
-		dest = dest - _cols;
-		if(dest < 0) // there is no modulo for negative numbers
-			dest = _fields + dest;
+		origin = origin - _cols;
+		if(origin < 0) // there is no modulo for negative numbers
+			origin = _fields + origin;
 	}
-	else
+	else if(direction == DOWN_LEFT)
 	{
-		output("failure: invalid direction\n");
-		exit(1);
+		origin = get_dest_rank(DOWN, get_dest_rank(LEFT, origin)) - 1;
+	}
+	else if(direction == DOWN_RIGHT)
+	{
+		origin = get_dest_rank(DOWN, get_dest_rank(RIGHT, origin)) - 1;
+	}
+	else if(direction == UP_LEFT)
+	{
+		origin = get_dest_rank(UP, get_dest_rank(LEFT, origin)) - 1;
+	}
+	else if(direction == UP_RIGHT)
+	{
+		origin = get_dest_rank(UP, get_dest_rank(RIGHT, origin)) - 1;
 	}
 
-	dest++;
+	origin++;
 
-	return dest;
+	return origin;
 }
 
 int sent;
@@ -270,24 +298,31 @@ void send_field(struct Field *field, enum Direction direction)
 	if(get_rank() == 0)
 		return;
 
+	// can be send to multiple processes
+
 	if(direction == UP_LEFT || direction == UP_RIGHT || direction == UP)
 	{
-		_send_field(field, get_dest_rank(UP));
+		_send_field(field, get_dest_rank(UP, get_rank()));
 	}
 
 	if(direction == DOWN_LEFT || direction == DOWN_RIGHT || direction == DOWN)
 	{
-		_send_field(field, get_dest_rank(DOWN));
+		_send_field(field, get_dest_rank(DOWN, get_rank()));
 	}
 
 	if(direction == UP_LEFT || direction == DOWN_LEFT || direction == LEFT)
 	{
-		_send_field(field, get_dest_rank(LEFT));
+		_send_field(field, get_dest_rank(LEFT, get_rank()));
 	}
 
 	if(direction == UP_RIGHT || direction == DOWN_RIGHT || direction == RIGHT)
 	{
-		_send_field(field, get_dest_rank(RIGHT));
+		_send_field(field, get_dest_rank(RIGHT, get_rank()));
+	}
+
+	if(direction == UP_RIGHT || direction == UP_LEFT || direction == DOWN_RIGHT || direction == DOWN_LEFT)
+	{
+		_send_field(field, get_dest_rank(direction, get_rank()));
 	}
 }
 
@@ -365,27 +400,42 @@ void exchange_border_fields(struct Map *map)
 
 	struct Segment *segment = get_segment();
 
-	// TODO
-//	for(int x = segment->x1; x <= segment->x2; x++)
-//	{
-//
-//	}
-
-	for(int y = segment->y1; y <= segment->y2; y++)
+	if(get_rows() > 1)
 	{
-		// left border
-		send_field(get_field(map, segment->x1, y), LEFT);
+		for(int x = segment->x1; x <= segment->x2; x++)
+		{
+			// upper border
+			send_field(get_field(map, x, segment->y1), UP);
 
-		// right border
-		send_field(get_field(map, segment->x2, y), RIGHT);
+			// lower border
+			send_field(get_field(map, x, segment->y2), DOWN);
+		}
+
+		// and now receive from other processes
+		for(int x = segment->x1; x <= segment->x2; x++)
+		{
+			recv_field(map);
+			recv_field(map);
+		}
 	}
 
-	// and now receive from other processes
-	for(int y = segment->y1; y <= segment->y2; y++)
+	if(get_cols() > 1)
 	{
-		// receive one field per line, because there are two sides
-		recv_field(map);
-		recv_field(map);
+		for(int y = segment->y1; y <= segment->y2; y++)
+		{
+			// left border
+			send_field(get_field(map, segment->x1, y), LEFT);
+
+			// right border
+			send_field(get_field(map, segment->x2, y), RIGHT);
+		}
+
+		// and now receive from other processes
+		for(int y = segment->y1; y <= segment->y2; y++)
+		{
+			recv_field(map);
+			recv_field(map);
+		}
 	}
 }
 

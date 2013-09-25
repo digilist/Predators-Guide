@@ -21,7 +21,10 @@ int get_num_processes();
 
 void init_segment(struct Map *map);
 struct Segment* get_segment();
-int get_dest_rank(enum Direction direction);
+int get_cols();
+int get_rows();
+
+int get_dest_rank(enum Direction direction, int origin);
 
 void send_field(struct Field *field, enum Direction direction);
 void send_field_if_border(struct Field *field);
