@@ -158,13 +158,25 @@ void init_segment(struct Map *map)
 	int segment_width = map->width / cols;
 	int segment_height = map->height / rows;
 
+	_segment = malloc(sizeof(struct Segment));
+
+	_segment->x1 = ((rank-1) % cols) * segment_width;
+	_segment->x2 = _segment->x1 + segment_width - 1;
+	_segment->y1 = ((rank-1) / cols) * segment_height;
+	_segment->y2 = _segment->y1 + segment_height - 1;
+	_segment->width = segment_width;
+	_segment->height = segment_height;
+
 	// if cols not devide width make the last column a little bigger
 	if(map->width % cols != 0)
 	{
 		// but only if this process simulates a segment in the last column
 		if(rank % cols == 0)
 		{
-			segment_width += map->width - cols * segment_width;
+			int diff = map->width - cols * segment_width;
+
+			_segment->width += diff;
+			_segment->x2 += diff;
 		}
 	}
 
@@ -174,20 +186,13 @@ void init_segment(struct Map *map)
 		// but only if this process simulates a segment in the last row
 		if(rank > (rows-1) * cols)
 		{
-			segment_height += map->height - rows * segment_height;
+			int diff = map->height - rows * segment_height;
+
+			_segment->height += diff;
+			_segment->y2 += diff;
 		}
 		// but only if this process simulates a last row in a column
-		printf("height\n");
 	}
-
-	_segment = malloc(sizeof(struct Segment));
-
-	_segment->x1 = (rank - 1) * segment_width;
-	_segment->x2 = rank * segment_width - 1;
-	_segment->y1 = 0;
-	_segment->y2 = segment_height - 1;
-	_segment->width = segment_width;
-	_segment->height = segment_height;
 
 	printf("Process %d Segment: %d:%d x %d:%d \n", get_rank(), _segment->x1, _segment->x2, _segment->y1, _segment->y2);
 }
@@ -295,7 +300,7 @@ void send_field_if_border(struct Field *field)
 	int border = is_border_field(field);
 	if(border > -1)
 	{
-//		output("%d: send border %dx%d : %d\n", get_rank(), field->x, field->y, border);
+		output("%d: send border %dx%d : %d\n", get_rank(), field->x, field->y, border);
 		send_field(field, border);
 	}
 }
