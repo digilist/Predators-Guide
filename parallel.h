@@ -31,6 +31,9 @@ void send_field_if_border(struct Field *field);
 void recv_field(struct Map *map);
 void probe_recv_field(struct Map *map);
 
+void start_rcv(struct Map *map);
+void terminate_rcv();
+
 void exchange_border_fields(struct Map *map);
 
 #endif

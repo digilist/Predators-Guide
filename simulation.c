@@ -47,10 +47,6 @@ void simulation_step(struct Map *map, int step)
 	{
 		struct Field *field = get_field(map, movements[i].x, movements[i].y);
 
-		// just check for incoming fields, if the current field is near a border
-		if(is_near_border(field))
-			probe_recv_field(map);
-
 		if (field->population_type != EMPTY)
 		{
 			// suche nach Beute
@@ -66,10 +62,6 @@ void simulation_step(struct Map *map, int step)
 	for (int i = 0; i < segment->width * segment->height; i++)
 	{
 		struct Field *field = get_field(map, movements[i].x, movements[i].y);
-
-		// just check for incoming fields, if the current field is near a border
-		if(is_near_border(field))
-			probe_recv_field(map);
 
 		if (field->population_type != EMPTY)
 		{

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include <pthread.h>
 
 #include "parallel.h"
 #include "map.h"
@@ -12,6 +13,8 @@ int _num_processes;
 int _rows;
 int _cols;
 int _fields;
+
+pthread_t pthread_rcv;
 
 MPI_Status status;
 
@@ -35,7 +38,10 @@ int _get_offset(void* t_struct, void* element);
  */
 int init_parallel(int argc, char *argv[])
 {
-	MPI_Init (&argc, &argv);
+	int provided;
+	MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+	if(provided < MPI_THREAD_MULTIPLE)
+		exit(1);
 
 	_create_mpi_types();
 
@@ -235,8 +241,6 @@ int get_dest_rank(enum Direction direction, int origin)
 {
 	// origin will be transformed to destination
 
-	int num_processes = get_num_processes();
-
 	// to simplyfy calculations, will be added later
 	origin--;
 
@@ -387,6 +391,31 @@ void probe_recv_field(struct Map *map)
 		}
 
 	}
+}
+
+/**
+ * start a new thread, to receive fields
+ */
+void start_rcv(struct Map *map)
+{
+	void* rcv_thread(void *arg) {
+		while(1)
+		{
+			recv_field((struct Map*) arg);
+		}
+		return 0;
+	}
+
+	int rc = pthread_create(&pthread_rcv, NULL, &rcv_thread, map);
+	if (rc){
+		printf("ERROR; return code from pthread_create() is %d\n", rc);
+		exit(-1);
+	}
+}
+
+void terminate_rcv()
+{
+	pthread_cancel(pthread_rcv);
 }
 
 /**

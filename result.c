@@ -8,7 +8,7 @@ void save_result(struct SimulationResult *result)
 	char filename[255];
 	sprintf(filename, "%s/steps.csv", SAVE_PATH);
 
-	FILE *file = fopen(filename, "a+");
+	FILE *file = fopen(filename, "w");
 
 	struct StepResult *r = result->first_step_result;
 	while(r != 0)
