@@ -6,6 +6,8 @@
 #include "parallel.h"
 #include "map.h"
 
+#define NUMBER_OF_RCV_THREADS 1
+
 struct Segment *_segment = 0;
 int _rank = -1;
 int _num_processes;
@@ -14,7 +16,7 @@ int _rows;
 int _cols;
 int _fields;
 
-pthread_t pthread_rcv;
+pthread_t pthread_rcv[NUMBER_OF_RCV_THREADS];
 
 MPI_Status status;
 
@@ -22,6 +24,9 @@ MPI_Status status;
 MPI_Datatype	MPI_Struct_Field;
 MPI_Datatype	MPI_Struct_StepResult;
 MPI_Op			MPI_Op_Sum_StepResult;
+
+int snd = 0;
+int rcv = 0;
 
 void _send_field(struct Field *field, int dest_rank);
 
@@ -47,6 +52,7 @@ int init_parallel(int argc, char *argv[])
 
 	return get_rank();
 }
+
 
 /**
  * get rank / id of current proccess
@@ -80,6 +86,7 @@ int get_num_processes()
  */
 void finish_parallel()
 {
+	printf("%d: rcv %d snd %d\n", get_rank(), rcv, snd);
 	MPI_Finalize();
 }
 
@@ -203,7 +210,6 @@ void init_segment(struct Map *map)
 			_segment->height += diff;
 			_segment->y2 += diff;
 		}
-		// but only if this process simulates a last row in a column
 	}
 
 	printf("Process %d Segment: %d:%d x %d:%d \n", get_rank(), _segment->x1, _segment->x2, _segment->y1, _segment->y2);
@@ -291,8 +297,6 @@ int get_dest_rank(enum Direction direction, int origin)
 	return origin;
 }
 
-int sent;
-
 /**
  * send a field to another process
  *
@@ -339,7 +343,7 @@ void _send_field(struct Field *field, int dest_rank)
 	{
 		output("%d: send %dx%d : %d\n", get_rank(), field->x, field->y, dest_rank);
 		MPI_Send(field, 1, MPI_Struct_Field, dest_rank, FIELD, MPI_COMM_WORLD);
-		sent++;
+		snd++;
 	}
 }
 
@@ -366,6 +370,8 @@ void recv_field(struct Map *map)
 	struct Field rcv_field;
 	MPI_Recv(&rcv_field, 1, MPI_Struct_Field, MPI_ANY_SOURCE, FIELD, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	output("%d: received %dx%d, border: %d\n", get_rank(), rcv_field.x, rcv_field.y, is_border_field(&rcv_field));
+
+	rcv++;
 
 	copy_field_to(&rcv_field, get_field(map, rcv_field.x, rcv_field.y));
 }
@@ -398,7 +404,7 @@ void probe_recv_field(struct Map *map)
  */
 void start_rcv(struct Map *map)
 {
-	void* rcv_thread(void *arg) {
+	void* rcv_field_thread(void *arg) {
 		while(1)
 		{
 			recv_field((struct Map*) arg);
@@ -406,16 +412,22 @@ void start_rcv(struct Map *map)
 		return 0;
 	}
 
-	int rc = pthread_create(&pthread_rcv, NULL, &rcv_thread, map);
-	if (rc){
-		printf("ERROR; return code from pthread_create() is %d\n", rc);
-		exit(-1);
+	for(int i = 0; i < NUMBER_OF_RCV_THREADS; i++)
+	{
+		int rc = pthread_create(&pthread_rcv[i], NULL, &rcv_field_thread, map);
+		if (rc){
+			printf("ERROR; return code from pthread_create() is %d\n", rc);
+			exit(-1);
+		}
 	}
 }
 
 void terminate_rcv()
 {
-	pthread_cancel(pthread_rcv);
+	for(int i = 0; i < NUMBER_OF_RCV_THREADS; i++)
+	{
+		pthread_cancel(pthread_rcv[i]);
+	}
 }
 
 /**

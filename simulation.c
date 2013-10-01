@@ -235,17 +235,18 @@ int check_for_food(struct Map *map, struct Field **field)
 			}
 		}
 	}
-	for(int i = 0; i < NUMBER_OF_DIRECTIONS; i++)
-	{
-		struct Field *neighboring_field = get_neighboring_field_in_direction(map, (*field)->x, (*field)->y, i);
 
-		if(find_food(map, neighboring_field, i, 0, (*field)->population_type) == 1)
-		{
-			move_field_to(field, neighboring_field);
-
-			return 1;
-		}
-	}
+//	for(int i = 0; i < NUMBER_OF_DIRECTIONS; i++)
+//	{
+//		struct Field *neighboring_field = get_neighboring_field_in_direction(map, (*field)->x, (*field)->y, i);
+//
+//		if(find_food(map, neighboring_field, i, 0, (*field)->population_type) == 1)
+//		{
+//			move_field_to(field, neighboring_field);
+//
+//			return 1;
+//		}
+//	}
 
 	return 0;
 }
