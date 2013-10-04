@@ -13,92 +13,116 @@ struct Coordinates
 	int y;
 };
 
-struct StepResult* calculate_step_result(struct Map *map, int step);
+struct StepResult* calculate_step_result(int step);
 
-struct Coordinates* get_random_movement_order(struct Map *map);
+void get_random_movement_order(struct Field **movements, int fields);
 
-int check_for_food(struct Map *map, struct Field **field);
+struct Field* check_for_food(struct Field *field);
 
-int find_food(struct Map *map, struct Field *field, enum Direction previous_direction, int layer, enum PopulationType population_type);
+struct Field* move_animal(struct Field *field);
 
-int move_animal(struct Map *map, struct Field **field);
-
-void create_child(struct Map *map, struct Field *field);
-
+void create_child(struct Field *field);
 int should_get_child(int population_type);
-
 int should_die(struct Field *field);
 
-struct Field* get_random_empty_neighboring_field(struct Map *map, struct Field *field);
-
-struct Field* get_neighboring_field_in_direction(struct Map *map, int x, int y, enum Direction direction);
+struct Field* get_random_empty_neighboring_field(struct Field *field);
+struct Field* get_neighboring_field_in_direction(int x, int y, enum Direction direction);
 
 /**
  * Simulation eines einzelnen Schrites auf dem Spielfeld
  *
  */
-void simulation_step(struct Map *map, int step)
+void simulation_step(int step)
 {
 	struct Segment *segment = get_segment();
 
-	struct Coordinates *movements;
-	movements = get_random_movement_order(map);
-	for (int i = 0; i < segment->width * segment->height; i++)
+	int fields = segment->width * segment->height;
+	struct Field *movements[fields];
+	get_random_movement_order(movements, fields);
+
+//	if(get_rank() == 1)
+//	{
+//		printf("---------\n");
+//
+////		sleep(3);
+////		print_all_fields(0);
+////		print_all_fields(1);
+//		struct Field *field = get_field(1, 1);
+//		struct Field *target = get_field(3, 3);
+//		printf("move\n");
+//		printf("%d\n", move_animal(&field));
+////		sleep(3);
+//
+//		printf("--------\n");
+//	}
+//
+//	return;
+
+	int food = 0;
+	for (int i = 0; i < fields; i++)
 	{
-		struct Field *field = get_field(map, movements[i].x, movements[i].y);
+		probe_recv_field();
+		struct Field *field = movements[i];
 
 		if (field->population_type != EMPTY)
 		{
+			check_for_food(field);
 			// suche nach Beute
-			if(check_for_food(map, &field))
-			{
-				field->last_step++;
-			}
 		}
 	}
-	free(movements);
 
-	movements = get_random_movement_order(map);
-	for (int i = 0; i < segment->width * segment->height; i++)
+//	free(movements);
+
+//	movements = get_random_movement_order(map);
+
+	int birth = 0;
+	int die = 0;
+
+	for (int i = 0; i < fields; i++)
 	{
-		struct Field *field = get_field(map, movements[i].x, movements[i].y);
+		struct Field *field = movements[i];
 
 		if (field->population_type != EMPTY)
 		{
-			struct Field *field = get_field(map, movements[i].x, movements[i].y);
-
 			// hat sich dieses Tier diese Runde schon einmal bewegt? (vorher durchs Fressen oder durch eine Bewegung auf dieses Feld)
 			if(field->last_step < step)
 			{
-				move_animal(map, &field);
+				struct Field *moved = move_animal(field);
+				if(moved != 0)
+				{
+					field->last_step++;
+					if(is_field_in_segment(moved))
+					{
+						field = moved;
+					}
+					else
+					{
+						field = 0; // animal has moved, but is now out of our segment
+					}
+				}
 			}
-
-			// überprüfe Alter auf Schwangerschaft
-			if (should_get_child(field->population_type))
+//
+			if(field != 0)
 			{
-				create_child(map, field);
-			}
-
-			// wenn das Tier zu alt ist, stirbt es
-			if (should_die(field))
-			{
-				reset_field(field);
-			}
-			else
-			{
-				// Tiere ohne Beute verhungern irgendwann
-				if (field->energy <= 0)
+				// check, whether the animal is old enough and should get a child
+				if (should_get_child(field->population_type))
+				{
+					create_child(field);
+					birth++;
+				}
+//
+//				// if the animal becomes to old or starves, it will die
+				if (should_die(field))
 				{
 					reset_field(field);
+					die++;
 				}
 				else
 				{
 					field->energy--;
+					field->age++;
 				}
 			}
-
-			if (field->population_type != EMPTY) // wenn nicht gestorben
-				field->age++;
 		}
 		else if(field->population_type == EMPTY)
 		{
@@ -108,7 +132,8 @@ void simulation_step(struct Map *map, int step)
 			}
 		}
 	}
-	free(movements);
+
+//	printf("%d: food %d, birth %d, die %d\n", get_rank(), food, birth, die);
 }
 
 /**
@@ -116,12 +141,13 @@ void simulation_step(struct Map *map, int step)
  * (wieviele Pflanzen, Beute und Jäger gibt es danach es)
  *
  */
-struct StepResult* calculate_step_result(struct Map *map, int step)
+struct StepResult* calculate_step_result(int step)
 {
 	// statistics
 	struct StepResult *resultset = malloc(sizeof(struct StepResult));
 	resultset->amount_prey = 0;
 	resultset->amount_predators = 0;
+	resultset->amount_plants = 0;
 	resultset->current_step = step;
 	resultset->next = 0;
 
@@ -131,7 +157,7 @@ struct StepResult* calculate_step_result(struct Map *map, int step)
 	{
 		for (int y = segment->y1; y <= segment->y2; y++)
 		{
-			struct Field *field = get_field(map, x, y);
+			struct Field *field = get_field(x, y);
 
 			if (field->population_type == PREY)
 			{
@@ -140,6 +166,11 @@ struct StepResult* calculate_step_result(struct Map *map, int step)
 			else if (field->population_type == PREDATOR)
 			{
 				resultset->amount_predators++;
+			}
+
+			if (field->contains_plant)
+			{
+				resultset->amount_plants++;
 			}
 		}
 	}
@@ -154,7 +185,9 @@ struct StepResult* calculate_step_result(struct Map *map, int step)
 int should_die(struct Field *field)
 {
 	int dying_rate = DYING_RATE[field->population_type] * 100;
-	return field->age > ELDERLY_AGE[field->population_type] || (DYING_RATE[field->population_type] > 0 && random_int(1, 100) <= dying_rate);
+	return field->energy <= 0 ||
+			field->age > ELDERLY_AGE[field->population_type] ||
+			(DYING_RATE[field->population_type] > 0 && random_int(1, 100) <= dying_rate);
 }
 
 /**
@@ -171,20 +204,16 @@ int should_get_child(int population_type)
  * bringe alle Felder in eine zufällige Reihenfolge,
  * um ein zufälligeres Verhalten bei den Bewegungen zu erzeugen
  */
-struct Coordinates* get_random_movement_order(struct Map *map)
+void get_random_movement_order(struct Field **movements, int fields)
 {
 	struct Segment *segment = get_segment();
-	int fields = segment->width * segment->height;
-	struct Coordinates *movements = malloc(sizeof(struct Coordinates) * fields);
 
 	int i = 0;
 	for (int x = segment->x1; x <= segment->x2; x++)
 	{
 		for (int y = segment->y1; y <= segment->y2; y++)
 		{
-			movements[i].x = x;
-			movements[i].y = y;
-
+			movements[i] = get_field(x, y);
 			i++;
 		}
 	}
@@ -193,163 +222,49 @@ struct Coordinates* get_random_movement_order(struct Map *map)
 	for (i = fields - 1; i >= 0; i--)
 	{
 		int j = rand() % fields;
-		struct Coordinates tmp = movements[j];
+		struct Field *tmp = movements[j];
 		movements[j] = movements[i];
 		movements[i] = tmp;
 	}
-
-	return movements;
 }
 
 /**
  * Suche nach Beute auf Nachbarfeldern und fresse sie falls vorhanden,
  * dabei geht er auf das Feld der Beute und hat seine Bewegung beendet
  *
- * wurde Beute gefunden und gefressen, wird 1 zurückgegeben andernfalls 0
+ * wurde Beute gefunden und gefressen, wird die neue Position zurückgegeben, andernfalls 0
  */
-int check_for_food(struct Map *map, struct Field **field)
+struct Field* check_for_food(struct Field *field)
 {
 	for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++) // alle umliegenden Felder prüfen
 	{
-		struct Field *neighboring_field = get_neighboring_field_in_direction(map, (*field)->x, (*field)->y, i);
+		struct Field *neighboring_field = get_neighboring_field_in_direction(field->x, field->y, i);
 
-		if((*field)->population_type == PREDATOR)
+		if(field->population_type == PREDATOR)
 		{
 			if (neighboring_field->population_type == PREY) // Pflanzenfresser frisst Pflanze
 			{
+				field->last_step++;
+				field->energy = MAX_ENERGY;
 				move_field_to(field, neighboring_field);
-				(*field)->energy = MAX_ENERGY;
 
-				return 1;
+				return neighboring_field;
 			}
 		}
-		else if((*field)->population_type == PREY)
+		else if(field->population_type == PREY)
 		{
 			if (neighboring_field->contains_plant) // Pflanzenfresser frisst Pflanze
 			{
+				field->last_step++;
+				field->energy = MAX_ENERGY;
+				field->contains_plant = 0;
 				move_field_to(field, neighboring_field);
-				(*field)->energy = MAX_ENERGY;
-				(*field)->contains_plant = 0;
 
-				return 1;
+				return neighboring_field;
 			}
 		}
 	}
 
-//	for(int i = 0; i < NUMBER_OF_DIRECTIONS; i++)
-//	{
-//		struct Field *neighboring_field = get_neighboring_field_in_direction(map, (*field)->x, (*field)->y, i);
-//
-//		if(find_food(map, neighboring_field, i, 0, (*field)->population_type) == 1)
-//		{
-//			move_field_to(field, neighboring_field);
-//
-//			return 1;
-//		}
-//	}
-
-	return 0;
-}
-
-int find_food(struct Map *map, struct Field *field, enum Direction previous_direction, int layer, enum PopulationType population_type)
-{
-	struct Field *fieldList[17];
-	enum Direction fieldListDirection[17];
-	int count = 0;
-
-	if (previous_direction < UP_LEFT)
-	{
-		struct Field *neighboringField = get_neighboring_field_in_direction(map, (field)->x, (field)->y, previous_direction);
-		fieldList[count] = neighboringField;
-		fieldListDirection[count] = previous_direction;
-		count++;
-	}
-	else if (previous_direction == UP_LEFT)
-	{
-		struct Field *neighboringField1 = get_neighboring_field_in_direction(map, (field)->x, (field)->y, previous_direction);
-		fieldList[count] = neighboringField1;
-		fieldListDirection[count] = previous_direction;
-		count++;
-
-		struct Field *neighboringField2 = get_neighboring_field_in_direction(map, (field)->x, (field)->y, UP);
-		fieldList[count] = neighboringField2;
-		fieldListDirection[count] = UP;
-		count++;
-
-		struct Field *neighboringField3 = get_neighboring_field_in_direction(map, (field)->x, (field)->y, LEFT);
-		fieldList[count] = neighboringField3;
-		fieldListDirection[count] = LEFT;
-		count++;
-	}
-	else if (previous_direction == UP_RIGHT)
-	{
-		struct Field *neighboringField1 = get_neighboring_field_in_direction(map, (field)->x, (field)->y, previous_direction);
-		fieldList[count] = neighboringField1;
-		fieldListDirection[count] = previous_direction;
-		count++;
-
-		struct Field *neighboringField2 = get_neighboring_field_in_direction(map, (field)->x, (field)->y, UP);
-		fieldList[count] = neighboringField2;
-		fieldListDirection[count] = UP;
-		count++;
-
-		struct Field *neighboringField3 = get_neighboring_field_in_direction(map, (field)->x, (field)->y, RIGHT);
-		fieldList[count] = neighboringField3;
-		fieldListDirection[count] = RIGHT;
-		count++;
-	}
-	else if (previous_direction == DOWN_LEFT)
-	{
-		struct Field *neighboringField1 = get_neighboring_field_in_direction(map, (field)->x, (field)->y, previous_direction);
-		fieldList[count] = neighboringField1;
-		fieldListDirection[count] = previous_direction;
-		count++;
-
-		struct Field *neighboringField2 = get_neighboring_field_in_direction(map, (field)->x, (field)->y, DOWN);
-		fieldList[count] = neighboringField2;
-		fieldListDirection[count] = DOWN;
-		count++;
-
-		struct Field *neighboringField3 = get_neighboring_field_in_direction(map, (field)->x, (field)->y, LEFT);
-		fieldList[count] = neighboringField3;
-		fieldListDirection[count] = LEFT;
-		count++;
-	}
-	else if (previous_direction == DOWN_RIGHT)
-	{
-		struct Field *neighboringField1 = get_neighboring_field_in_direction(map, (field)->x, (field)->y, previous_direction);
-		fieldList[count] = neighboringField1;
-		fieldListDirection[count] = previous_direction;
-		count++;
-
-		struct Field *neighboringField2 = get_neighboring_field_in_direction(map, (field)->x, (field)->y, DOWN);
-		fieldList[count] = neighboringField2;
-		fieldListDirection[count] = DOWN;
-		count++;
-
-		struct Field *neighboringField3 = get_neighboring_field_in_direction(map, (field)->x, (field)->y, RIGHT);
-		fieldList[count] = neighboringField3;
-		fieldListDirection[count] = RIGHT;
-		count++;
-	}
-	for (int i = 0; i < count; i++)
-	{
-		if (fieldList[i]->population_type == PREY && population_type == PREDATOR)
-		{
-			return 1;
-		}
-		//else if(fieldList[i]->containsPlant && popuType == PREY)
-		//{
-		//	return 1;
-		//}
-		else if (layer == 0)
-		{
-			if (find_food(map, fieldList[i], fieldListDirection[i], 1, population_type) == 1)
-			{
-				return 1;
-			}
-		}
-	}
 	return 0;
 }
 
@@ -358,14 +273,14 @@ int find_food(struct Map *map, struct Field *field, enum Direction previous_dire
  *
  * hat sich das Tier bewegt wird 1, andernfalls 0
  */
-int move_animal(struct Map *map, struct Field **field)
+struct Field* move_animal(struct Field *field)
 {
-	struct Field *neighboring_field = get_random_empty_neighboring_field(map, *field);
+	struct Field *neighboring_field = get_random_empty_neighboring_field(field);
 
 	if (neighboring_field)
 	{
 		move_field_to(field, neighboring_field);
-		return 1;
+		return neighboring_field;
 	}
 
 	return 0;
@@ -374,17 +289,15 @@ int move_animal(struct Map *map, struct Field **field)
 /**
  * Ein Kind derselben Klasse auf einem zufälligen Nachbarfeld gebähren
  */
-void create_child(struct Map *map, struct Field *field)
+void create_child(struct Field *field)
 {
-	struct Field *neighboring_field = get_random_empty_neighboring_field(map, field);
+	struct Field *neighboring_field = get_random_empty_neighboring_field(field);
 	if (neighboring_field)
 	{
 		neighboring_field->population_type = field->population_type;
 		neighboring_field->energy = MAX_ENERGY;
 
 		send_field_if_border(neighboring_field);
-
-		return;
 	}
 }
 
@@ -392,10 +305,10 @@ void create_child(struct Map *map, struct Field *field)
  * gibt ein zufälliges benachbartes Feld zurück
  *
  */
-struct Field* get_random_neighboring_field(struct Map *map, struct Field *field)
+struct Field* get_random_neighboring_field(struct Field *field)
 {
 	enum Direction direction = rand() % NUMBER_OF_DIRECTIONS;
-	struct Field *neighboring_field = get_neighboring_field_in_direction(map, field->x, field->y, direction);
+	struct Field *neighboring_field = get_neighboring_field_in_direction(field->x, field->y, direction);
 
 	return neighboring_field;
 }
@@ -405,19 +318,18 @@ struct Field* get_random_neighboring_field(struct Map *map, struct Field *field)
  * ist keines mehr frei, wird 0 zurückgegeben
  *
  */
-struct Field* get_random_empty_neighboring_field(struct Map *map, struct Field *field)
+struct Field* get_random_empty_neighboring_field(struct Field *field)
 {
 	enum Direction direction = rand() % NUMBER_OF_DIRECTIONS;
 	for (int i = 0; i < NUMBER_OF_DIRECTIONS; i++)
 	{
-		struct Field *neighboring_field = get_neighboring_field_in_direction(map, field->x, field->y, direction);
+		struct Field *neighboring_field = get_neighboring_field_in_direction(field->x, field->y, direction);
 		if (neighboring_field->population_type == EMPTY)
 		{
 			return neighboring_field;
 		}
 
-		i++;
-		direction = (direction + 1) % 4;
+		direction = (direction + 1) % NUMBER_OF_DIRECTIONS;
 	}
 
 	return 0;
@@ -426,15 +338,17 @@ struct Field* get_random_empty_neighboring_field(struct Map *map, struct Field *
 /**
  * gibt das benachbarte Feld in der gegebenen Richtung zurück
  */
-struct Field* get_neighboring_field_in_direction(struct Map *map, int x, int y, enum Direction direction)
+struct Field* get_neighboring_field_in_direction(int x, int y, enum Direction direction)
 {
+	struct Map *map = get_map();
+
 	if (direction == UP || direction == UP_LEFT || direction == UP_RIGHT)
 	{
-		y += 1;
+		y -= 1;
 	}
 	if (direction == DOWN || direction == DOWN_LEFT || direction == DOWN_RIGHT)
 	{
-		y -= 1;
+		y += 1;
 	}
 	if (direction == RIGHT || direction == UP_RIGHT || direction == DOWN_RIGHT)
 	{
@@ -452,6 +366,6 @@ struct Field* get_neighboring_field_in_direction(struct Map *map, int x, int y, 
 	x %= map->width;
 	y %= map->height;
 
-	return get_field(map, x, y);
+	return get_field(x, y);
 }
 

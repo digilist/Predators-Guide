@@ -5,6 +5,7 @@ struct StepResult
 {
 	unsigned int amount_predators;
 	unsigned int amount_prey;
+	unsigned int amount_plants;
 	unsigned int current_step;
 	struct StepResult *next;
 };

@@ -8,29 +8,25 @@
 #include "simulation.h"
 #include "parallel.h"
 
-int get_stats(struct Map *map, int step, struct StepResult **last_result, struct SimulationResult *result);
+int get_stats(int step, struct StepResult **last_result, struct SimulationResult *result);
 
 struct SimulationResult* run_simulation()
 {
 	int rank = get_rank();
 	int num_processes = get_num_processes();
 
-	struct Map *map;
 	struct SimulationResult *result = malloc(sizeof(struct SimulationResult));
 	struct StepResult *last_result = 0;
 
 	if(rank > 0 || num_processes == 1)
 	{
-		map = init_map();
-		init_segment(map);
-
-		init_population(map);
+		init_map();
 	}
 
-	MPI_Barrier(MPI_COMM_WORLD);
 
-	if(rank > 0)
-		start_rcv(map);
+	printf("%d: foo\n", get_rank());
+
+	MPI_Barrier(MPI_COMM_WORLD);
 
 	int i = 0;
 	int died = 0;
@@ -39,7 +35,37 @@ struct SimulationResult* run_simulation()
 	{
 		printf("Start Population\n");
 	}
-	died = get_stats(map, i, &last_result, result);
+
+	died = get_stats(i, &last_result, result);
+
+//	if(rank > 0)
+//	{
+//		print_all_fields(0);
+//		sleep(2);
+//		printf("------------------\n");
+//		DEBUG = 1;
+//
+//		struct Field *field;
+//		if(rank == 1)
+//		{
+//			field = get_field(1, 1);
+//			printf("moved %d\n", move_animal(&field));
+//
+//			printf("------------------\n");
+//		}
+//		if(rank == 3)
+//		{
+//			field = get_field(0, 1);
+//			printf("moved %d\n", move_animal(&field));
+//		}
+//		sleep(1);
+//		print_all_fields(0);
+//	}
+//
+//	died = get_stats(i, &last_result, result);
+//
+//	return 0;
+
 
 	while(i < MAX_SIMULATION_STEPS && !died)
 	{
@@ -49,22 +75,25 @@ struct SimulationResult* run_simulation()
 			printf("Simulation Step %d\n", i);
 
 		if(rank > 0 || num_processes == 1)
-			simulation_step(map, i);
+			simulation_step(i);
 
 		MPI_Barrier(MPI_COMM_WORLD);
-		died = get_stats(map, i, &last_result, result);
+		died = get_stats(i, &last_result, result);
+
+		if(num_processes == 1)
+		{
+			print_bitmap(i);
+		}
 
 		// barrier to ensure, simulation continues only when all processes are ready
 		// not needed, because of MPI_Bcast in get_stats() ?!?
 //		MPI_Barrier(MPI_COMM_WORLD);
 
-		int flag = 0;
-		MPI_Status status;
-		MPI_Iprobe(MPI_ANY_SOURCE, FIELD, MPI_COMM_WORLD, &flag, &status);
-	}
 
-	if(rank > 0)
-		terminate_rcv();
+//		int flag = 0;
+//		MPI_Status status;
+//		MPI_Iprobe(MPI_ANY_SOURCE, FIELD, MPI_COMM_WORLD, &flag, &status);
+	}
 
 	return result;
 }
@@ -74,7 +103,7 @@ struct SimulationResult* run_simulation()
  *
  * returns 1, if one species died
  */
-int get_stats(struct Map *map, int step, struct StepResult **last_result, struct SimulationResult *result)
+int get_stats(int step, struct StepResult **last_result, struct SimulationResult *result)
 {
 	int rank = get_rank();
 	int num_processes = get_num_processes();
@@ -89,7 +118,7 @@ int get_stats(struct Map *map, int step, struct StepResult **last_result, struct
 
 		if(rank > 0)
 		{
-			struct StepResult *tmp = calculate_step_result(map, step);
+			struct StepResult *tmp = calculate_step_result(step);
 			memcpy(&local_step_result, tmp, sizeof(struct StepResult));
 			free(tmp);
 		}
@@ -98,7 +127,7 @@ int get_stats(struct Map *map, int step, struct StepResult **last_result, struct
 	}
 	else
 	{
-		struct StepResult *tmp = calculate_step_result(map, step);
+		struct StepResult *tmp = calculate_step_result(step);
 		memcpy(&step_result, tmp, sizeof(struct StepResult));
 	}
 
@@ -119,7 +148,7 @@ int get_stats(struct Map *map, int step, struct StepResult **last_result, struct
 		}
 		**last_result = step_result;
 
-		printf(" - %d predators / %d prey\n", step_result.amount_predators, step_result.amount_prey);
+		printf(" - %d predators / %d prey / %d plants\n", step_result.amount_predators, step_result.amount_prey, step_result.amount_plants);
 
 		died = step_result.amount_predators == 0 || step_result.amount_prey == 0;
 

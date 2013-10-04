@@ -18,10 +18,12 @@ mpi: compile
 
 valgrind: predators.out
 	make compile
-	valgrind --leak-check=yes ./predators.out
+	mpiexec -n $(p) valgrind --tool=memcheck ./predators.out
 
 plot: predators.out
 	gnuplot pred.plot
+	sleep 1
+	evince plot.pdf
 
 .PHONY: clean
 clean:

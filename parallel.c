@@ -6,15 +6,10 @@
 #include "parallel.h"
 #include "map.h"
 
-#define NUMBER_OF_RCV_THREADS 1
+#define NUMBER_OF_RCV_THREADS 2
 
-struct Segment *_segment = 0;
 int _rank = -1;
 int _num_processes;
-
-int _rows;
-int _cols;
-int _fields;
 
 pthread_t pthread_rcv[NUMBER_OF_RCV_THREADS];
 
@@ -47,6 +42,11 @@ int init_parallel(int argc, char *argv[])
 	MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 	if(provided < MPI_THREAD_MULTIPLE)
 		exit(1);
+
+	for(int i = 0; i < NUMBER_OF_RCV_THREADS; i++)
+	{
+		pthread_rcv[i] = 0;
+	}
 
 	_create_mpi_types();
 
@@ -86,162 +86,31 @@ int get_num_processes()
  */
 void finish_parallel()
 {
+	terminate_rcv();
+
 	printf("%d: rcv %d snd %d\n", get_rank(), rcv, snd);
 	MPI_Finalize();
 }
 
 /**
- * init the segment for this process and save it to a local variable
- */
-void init_segment(struct Map *map)
-{
-	int num_simulators = get_num_processes();
-	int rank = get_rank();
-
-	if(num_simulators > 1)
-		num_simulators--;
-
-	// if there's only one process, the segment calculation differs a litte bit
-	if(rank == 0)
-	{
-		if(num_simulators == 1)
-		{
-			rank = 1; // just for calculations
-		}
-		else
-		{
-			output("Process 0 isn't allowed to get a simulation segment!\n");
-			exit(1);
-		}
-	}
-
-	_rows = 1;
-	_cols = 1;
-
-	if(num_simulators > 1)
-	{
-		// calculate number of segments, seperated in rows and columns
-		// this algorithm is based on prime factorization
-		int n = num_simulators;
-		int div = 2;
-		int primes[10]; // under the assumption, there are max. 10 prime factors in the domain of n / num_simulators
-		int p = 0; // highest index in primes
-
-		while(n % div != 0)
-			div++;
-
-		while(n % div == 0)
-		{
-			primes[p] = div;
-
-			if(n == div && (p == 0 || 1)) // primes and end
-			{
-				break;
-			}
-
-			n = n / div;
-			p++;
-
-			while(n % div != 0)
-				div++;
-		}
-
-		if (p == 0) // prime
-		{
-			primes[1] = 1;
-			p++;
-		}
-
-		for(int i = 1; i < p; i++)
-		{
-			primes[0] *= primes[i];
-			if(p - 1 > i)
-			{
-				primes[p - 1] *= primes[p];
-				p--;
-			}
-		}
-		primes[1] = primes[p];
-
-		_cols = primes[0];
-		_rows = primes[1];
-	}
-
-	if(rank == 1)
-	{
-		printf("Splitting Map into %d cols and %d rows\n", _cols, _rows);
-	}
-
-	_fields = _cols * _rows;
-
-	int segment_width = map->width / _cols;
-	int segment_height = map->height / _rows;
-
-	_segment = malloc(sizeof(struct Segment));
-
-	_segment->x1 = ((rank-1) % _cols) * segment_width;
-	_segment->x2 = _segment->x1 + segment_width - 1;
-	_segment->y1 = ((rank-1) / _cols) * segment_height;
-	_segment->y2 = _segment->y1 + segment_height - 1;
-	_segment->width = segment_width;
-	_segment->height = segment_height;
-
-	// if cols not devide width make the last column a little bigger
-	if(map->width % _cols != 0)
-	{
-		// but only if this process simulates a segment in the last column
-		if(rank % _cols == 0)
-		{
-			int diff = map->width - _cols * segment_width;
-
-			_segment->width += diff;
-			_segment->x2 += diff;
-		}
-	}
-
-	// if rows not devide height make the last column a little bigger
-	if(map->height % _rows != 0)
-	{
-		// but only if this process simulates a segment in the last row
-		if(rank > (_rows-1) * _cols)
-		{
-			int diff = map->height - _rows * segment_height;
-
-			_segment->height += diff;
-			_segment->y2 += diff;
-		}
-	}
-
-	printf("Process %d Segment: %d:%d x %d:%d \n", get_rank(), _segment->x1, _segment->x2, _segment->y1, _segment->y2);
-}
-
-/**
- * get the segment, in which the simulation for this process should run
- */
-struct Segment* get_segment()
-{
-	return _segment;
-}
-
-/**
- * returns the number of columns, the map is seperated devided in
- */
-int get_cols()
-{
-	return _cols;
-}
-
-/**
- * returns the number of rows, the map is seperated devided in
- */
-int get_rows()
-{
-	return _rows;
-}
-
-/**
- * ensure, the destination rank is inside the simulation domain
+ * get the process that "owns" the given field
  *
+ */
+int get_field_process(struct Field *field)
+{
+	struct Map *map = get_map();
+
+	int col = field->x / (map->width / get_cols());
+	int row = field->y / (map->height / get_rows());
+
+	int p = get_rows() * row + col + 1; // plus 1, because the master simulates no process
+
+	return p;
+}
+
+/**
+ * get the rank of the proccess in direction
+ * starting from origin
  */
 int get_dest_rank(enum Direction direction, int origin)
 {
@@ -250,14 +119,15 @@ int get_dest_rank(enum Direction direction, int origin)
 	// to simplyfy calculations, will be added later
 	origin--;
 
-	int row_start = _cols * (origin / _cols);
-	int row_end = _cols * (origin / _cols) + _cols - 1;
+	int row_start = get_cols() * (origin / get_cols());
+	int row_end = get_cols() * (origin / get_cols()) + get_cols() - 1;
+
 
 	if(direction == LEFT)
 	{
 		origin--;
 		if(origin < row_start)
-			origin = row_start + _cols - 1;
+			origin = row_start + get_cols() - 1;
 	}
 	else if(direction == RIGHT)
 	{
@@ -267,41 +137,146 @@ int get_dest_rank(enum Direction direction, int origin)
 	}
 	else if(direction == UP)
 	{
-		origin = (origin + _cols) % _fields;
+		origin = (origin + get_cols()) % (get_rows() * get_cols());
 	}
 	else if(direction == DOWN)
 	{
-		origin = origin - _cols;
+		origin = origin - get_cols();
 		if(origin < 0) // there is no modulo for negative numbers
-			origin = _fields + origin;
-	}
-	else if(direction == DOWN_LEFT)
-	{
-		origin = get_dest_rank(DOWN, get_dest_rank(LEFT, origin)) - 1;
-	}
-	else if(direction == DOWN_RIGHT)
-	{
-		origin = get_dest_rank(DOWN, get_dest_rank(RIGHT, origin)) - 1;
-	}
-	else if(direction == UP_LEFT)
-	{
-		origin = get_dest_rank(UP, get_dest_rank(LEFT, origin)) - 1;
-	}
-	else if(direction == UP_RIGHT)
-	{
-		origin = get_dest_rank(UP, get_dest_rank(RIGHT, origin)) - 1;
+			origin = (get_rows() * get_cols()) + origin;
 	}
 
 	origin++;
 
+	if(direction == DOWN_LEFT)
+	{
+		origin = get_dest_rank(DOWN, get_dest_rank(LEFT, origin));
+	}
+	else if(direction == DOWN_RIGHT)
+	{
+		origin = get_dest_rank(DOWN, get_dest_rank(RIGHT, origin));
+	}
+	else if(direction == UP_LEFT)
+	{
+		origin = get_dest_rank(UP, get_dest_rank(LEFT, origin));
+	}
+	else if(direction == UP_RIGHT)
+	{
+		origin = get_dest_rank(UP, get_dest_rank(RIGHT, origin));
+	}
+
 	return origin;
+}
+
+void send_field(struct Field *field)
+{
+	int my_rank = get_rank();
+
+	if(my_rank == 0)
+		return;
+
+	struct Segment *segment = get_segment();
+	int owner = get_field_process(field);
+
+	if(owner == my_rank)
+	{
+		send_field_if_border(field);
+	}
+	else
+	{
+		// send foreign field to relevant processes
+		int left = 0;
+		int right = 0;
+		int up = 0;
+		int down = 0;
+
+		if(field->x < segment->x1)
+		{
+			if(field->x == 0) // must be the behind right border (floats around the map)
+			{
+				right = 1;
+			}
+			else
+			{
+				left = 1;
+			}
+		}
+		else if(field->x > segment->x2)
+		{
+			if(segment->x1 == 0) // must be behind the left border (floats around the map)
+			{
+				left = 1;
+			}
+			else
+			{
+				right = 1;
+			}
+		}
+		else if(field->x == segment->x1)
+		{
+			left = 1;
+		}
+		else if(field->x == segment->x2)
+		{
+			right = 1;
+		}
+
+		if(field->y < segment->y1)
+		{
+			if(field->y == 0) // must be the behind lower border (floats around the map)
+			{
+				down = 1;
+			}
+			else
+			{
+				up = 1;
+			}
+		}
+		else if(field->y > segment->y2)
+		{
+			if(segment->y1 == 0) // must be behind the left border (floats around the map)
+			{
+				up = 1;
+			}
+			else
+			{
+				down = 1;
+			}
+		}
+		else if(field->y == segment->y1)
+		{
+			up = 1;
+		}
+		else if(field->y == segment->y2)
+		{
+			down = 1;
+		}
+
+		if(left)
+			_send_field(field, get_dest_rank(LEFT, my_rank));
+		if(right)
+			_send_field(field, get_dest_rank(RIGHT, my_rank));
+		if(up)
+			_send_field(field, get_dest_rank(UP, my_rank));
+		if(down)
+			_send_field(field, get_dest_rank(DOWN, my_rank));
+
+		if(up && left)
+			_send_field(field, get_dest_rank(UP_LEFT, my_rank));
+		else if(up && right)
+			_send_field(field, get_dest_rank(UP_RIGHT, my_rank));
+		else if(down && left)
+			_send_field(field, get_dest_rank(DOWN_LEFT, my_rank));
+		else if(down && right)
+			_send_field(field, get_dest_rank(DOWN_RIGHT, my_rank));
+	}
 }
 
 /**
  * send a field to another process
  *
  */
-void send_field(struct Field *field, enum Direction direction)
+void send_field_into_direction(struct Field *field, enum Direction direction)
 {
 	if(get_rank() == 0)
 		return;
@@ -341,8 +316,8 @@ void _send_field(struct Field *field, int dest_rank)
 {
 	if(dest_rank != get_rank()) // don't send to myself
 	{
-		output("%d: send %dx%d : %d\n", get_rank(), field->x, field->y, dest_rank);
-		MPI_Send(field, 1, MPI_Struct_Field, dest_rank, FIELD, MPI_COMM_WORLD);
+		output("%d: send %dx%d (Population Type %d, Age %d) to %d\n", get_rank(), field->x, field->y, field->population_type, field->age, dest_rank);
+		MPI_Ssend(field, 1, MPI_Struct_Field, dest_rank, FIELD, MPI_COMM_WORLD);
 		snd++;
 	}
 }
@@ -356,8 +331,8 @@ void send_field_if_border(struct Field *field)
 	int border = is_border_field(field);
 	if(border > -1)
 	{
-		output("%d: send border %dx%d : %d\n", get_rank(), field->x, field->y, border);
-		send_field(field, border);
+		output("%d: send border %dx%d into direction %d\n", get_rank(), field->x, field->y, border);
+		send_field_into_direction(field, border);
 	}
 }
 
@@ -365,7 +340,7 @@ void send_field_if_border(struct Field *field)
  * receive a field from another process
  *
  */
-void recv_field(struct Map *map)
+void recv_field()
 {
 	struct Field rcv_field;
 	MPI_Recv(&rcv_field, 1, MPI_Struct_Field, MPI_ANY_SOURCE, FIELD, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -373,13 +348,13 @@ void recv_field(struct Map *map)
 
 	rcv++;
 
-	copy_field_to(&rcv_field, get_field(map, rcv_field.x, rcv_field.y));
+	copy_field_to(&rcv_field, get_field(rcv_field.x, rcv_field.y));
 }
 
 /**
  * probe if there is a message and receive if
  */
-void probe_recv_field(struct Map *map)
+void probe_recv_field()
 {
 	int fails = 0;
 	while(fails < 2)
@@ -388,33 +363,32 @@ void probe_recv_field(struct Map *map)
 		MPI_Iprobe(MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &flag, &status);
 		if(flag)
 		{
-			recv_field(map);
+			recv_field();
 			fails = 0;
 		}
 		else
 		{
 			fails++;
 		}
-
 	}
 }
 
 /**
  * start a new thread, to receive fields
  */
-void start_rcv(struct Map *map)
+void start_rcv()
 {
-	void* rcv_field_thread(void *arg) {
+	void* rcv_field_thread() {
 		while(1)
 		{
-			recv_field((struct Map*) arg);
+			recv_field();
 		}
 		return 0;
 	}
 
 	for(int i = 0; i < NUMBER_OF_RCV_THREADS; i++)
 	{
-		int rc = pthread_create(&pthread_rcv[i], NULL, &rcv_field_thread, map);
+		int rc = pthread_create(&pthread_rcv[i], NULL, &rcv_field_thread, 0);
 		if (rc){
 			printf("ERROR; return code from pthread_create() is %d\n", rc);
 			exit(-1);
@@ -426,7 +400,8 @@ void terminate_rcv()
 {
 	for(int i = 0; i < NUMBER_OF_RCV_THREADS; i++)
 	{
-		pthread_cancel(pthread_rcv[i]);
+		if(pthread_rcv[i] != 0)
+			pthread_cancel(pthread_rcv[i]);
 	}
 }
 
@@ -434,7 +409,7 @@ void terminate_rcv()
  * send information about our border fields
  * and receive information about the adjacent fields
  */
-void exchange_border_fields(struct Map *map)
+void exchange_border_fields()
 {
 	if(get_rank() == 0 || get_num_processes() <= 2)
 		return;
@@ -446,17 +421,13 @@ void exchange_border_fields(struct Map *map)
 		for(int x = segment->x1; x <= segment->x2; x++)
 		{
 			// upper border
-			send_field(get_field(map, x, segment->y1), UP);
+			send_field(get_field(x, segment->y1));
 
 			// lower border
-			send_field(get_field(map, x, segment->y2), DOWN);
-		}
+			send_field(get_field(x, segment->y2));
 
-		// and now receive from other processes
-		for(int x = segment->x1; x <= segment->x2; x++)
-		{
-			recv_field(map);
-			recv_field(map);
+//			recv_field();
+//			recv_field();
 		}
 	}
 
@@ -465,19 +436,19 @@ void exchange_border_fields(struct Map *map)
 		for(int y = segment->y1; y <= segment->y2; y++)
 		{
 			// left border
-			send_field(get_field(map, segment->x1, y), LEFT);
+			send_field(get_field(segment->x1, y));
 
 			// right border
-			send_field(get_field(map, segment->x2, y), RIGHT);
-		}
+			send_field(get_field(segment->x2, y));
 
-		// and now receive from other processes
-		for(int y = segment->y1; y <= segment->y2; y++)
-		{
-			recv_field(map);
-			recv_field(map);
+			// receive from other processes
+//			recv_field();
+//			recv_field();
 		}
 	}
+
+//	for(int i = 0; i < 16; i++)
+//		recv_field();
 }
 
 /**
@@ -513,14 +484,15 @@ void _create_mpi_struct_field()
 void _create_mpi_struct_step_result()
 {
 	struct StepResult step_result;
-	MPI_Datatype types[2] = {MPI_UNSIGNED, MPI_UNSIGNED}; // ignore current_step and *next
-	int blocklen[2] = {1, 1};
-	MPI_Aint disp[2] = {
+	MPI_Datatype types[3] = {MPI_UNSIGNED, MPI_UNSIGNED, MPI_UNSIGNED}; // ignore current_step and *next
+	int blocklen[3] = {1, 1, 1};
+	MPI_Aint disp[3] = {
 		_get_offset(&step_result, &step_result.amount_predators),
 		_get_offset(&step_result, &step_result.amount_prey),
+		_get_offset(&step_result, &step_result.amount_plants),
 	};
 
-	MPI_Type_create_struct(2, blocklen, disp, types, &MPI_Struct_StepResult);
+	MPI_Type_create_struct(3, blocklen, disp, types, &MPI_Struct_StepResult);
 	MPI_Type_commit(&MPI_Struct_StepResult);
 }
 
@@ -532,6 +504,7 @@ void _create_mpi_op_sum_step_results()
 		{
 			r.amount_predators = in->amount_predators + inout->amount_predators;
 			r.amount_prey = in->amount_prey + inout->amount_prey;
+			r.amount_plants = in->amount_plants + inout->amount_plants;
 			*inout = r;
 		}
 	}

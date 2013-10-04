@@ -13,7 +13,7 @@ void save_result(struct SimulationResult *result)
 	struct StepResult *r = result->first_step_result;
 	while(r != 0)
 	{
-		fprintf(file, "%d\t%d\t%d\n", r->current_step, r->amount_predators, r->amount_prey);
+		fprintf(file, "%d\t%d\t%d\t%d\n", r->current_step, r->amount_predators, r->amount_prey, r->amount_plants);
 		r = r->next;
 	}
 

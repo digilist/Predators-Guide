@@ -1,6 +1,9 @@
 #ifndef CONFIG_H_INCLUDED
 #define CONFIG_H_INCLUDED
 
+#include "map.h"
+
+extern int DEBUG;
 extern const int PRINTING_ENABLED;
 
 extern const char SAVE_PATH[]; // Pfad zu Ordner für Bitmap-Erzeugung
@@ -26,5 +29,8 @@ extern const int MAX_PLANT_AGE; // max. Alter einer Pflanze
 
 int random_int(int low, int high);
 void output(const char* format, ...);
+
+void print_all_fields(int borders);
+void print_field(struct Field *field);
 
 #endif

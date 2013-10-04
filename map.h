@@ -3,6 +3,8 @@
 #ifndef MAP_H_INCLUDED
 #define MAP_H_INCLUDED
 
+#define get_field(x, y) _get_field(x, y, __func__)
+
 /**
  * Repräsentiert das Spielfeld
  *
@@ -54,7 +56,7 @@ struct Field
 
 	enum PopulationType population_type;
 
-	unsigned int last_step; // speichert, wann das Lebewesen seinen letzten Schritt vollzogen hat (um doppelte Schritte nach Bewegungen zu vermeiden)
+	int last_step; // speichert, wann das Lebewesen seinen letzten Schritt vollzogen hat (um doppelte Schritte nach Bewegungen zu vermeiden)
 
 	// wenn populationType == EMPTY muss keines dieser Werte gesetzt werden
 	unsigned int age; // erreicht das Lebewesen ein bestimmtes Alter, bringt es ein neues Lebewesen auf die Welt
@@ -66,21 +68,24 @@ struct Field
 
 };
 
-struct Map* init_map();
+void init_map();
+struct Map* get_map();
 
-void init_population(struct Map *map);
+struct Segment* get_segment();
+int get_cols();
+int get_rows();
 
-void print_bitmap(struct Map *map, int step);
-
-struct Field* get_field(struct Map *map, int x, int y);
+struct Field* _get_field(int x, int y, const char *caller);
 
 void copy_field_to(struct Field *source_field, struct Field *target_field);
 
-void move_field_to(struct Field **source_field, struct Field *target_field);
+void move_field_to(struct Field *source_field, struct Field *target_field);
 
 void reset_field(struct Field *field);
 
 int is_near_border(struct Field *field);
 int is_border_field(struct Field *field);
+
+void print_bitmap(int step);
 
 #endif

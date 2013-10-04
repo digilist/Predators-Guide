@@ -14,8 +14,7 @@ enum Direction
 	UP, DOWN, LEFT, RIGHT, UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, NUMBER_OF_DIRECTIONS
 };
 
-void simulation_step(struct Map *map, int step);
-
-struct StepResult* calculate_step_result(struct Map *map, int step);
+void simulation_step(int step);
+struct StepResult* calculate_step_result(int step);
 
 #endif
