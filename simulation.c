@@ -40,7 +40,6 @@ void simulation_step(int step)
 	struct Field **movements = malloc(sizeof(struct Field *) * fields);
 	get_random_movement_order(movements, fields);
 
-	int food = 0;
 	for (int i = 0; i < fields; i++)
 	{
 		probe_recv_field();

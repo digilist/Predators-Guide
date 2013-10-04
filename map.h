@@ -76,6 +76,7 @@ int get_cols();
 int get_rows();
 
 struct Field* _get_field(int x, int y, const char *caller);
+int is_field_in_segment(struct Field *field);
 
 void copy_field_to(struct Field *source_field, struct Field *target_field);
 

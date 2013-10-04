@@ -1,6 +1,8 @@
 #ifndef RESULTS_H_INCLUDED
 #define RESULTS_H_INCLUDED
 
+#include <sys/time.h>
+
 struct StepResult
 {
 	unsigned int amount_predators;
@@ -14,6 +16,9 @@ struct SimulationResult
 {
 	int simulation_steps;
 	struct StepResult *first_step_result;
+	struct timeval start_time;
+	struct timeval finish_time;
+	struct timeval run_time;
 };
 
 void save_result(struct SimulationResult *result);

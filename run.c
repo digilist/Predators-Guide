@@ -3,20 +3,31 @@
 #include <stdlib.h>
 #include <math.h>
 #include <mpi.h>
+#include <sys/time.h>
 
 #include "map.h"
 #include "simulation.h"
 #include "parallel.h"
 
 int get_stats(int step, struct StepResult **last_result, struct SimulationResult *result);
+void calc_runtime(struct SimulationResult *result);
 
 struct SimulationResult* run_simulation()
 {
 	int rank = get_rank();
 	int num_processes = get_num_processes();
 
-	struct SimulationResult *result = malloc(sizeof(struct SimulationResult));
+	struct SimulationResult *result = 0;
 	struct StepResult *last_result = 0;
+
+	// only the master process collects the simulation results
+	if(rank == 0)
+	{
+		result = malloc(sizeof(struct SimulationResult));
+
+		// set start time
+		gettimeofday(&result->start_time, NULL);
+	}
 
 	init_map();
 
@@ -56,6 +67,12 @@ struct SimulationResult* run_simulation()
 //		int flag = 0;
 //		MPI_Status status;
 //		MPI_Iprobe(MPI_ANY_SOURCE, FIELD, MPI_COMM_WORLD, &flag, &status);
+	}
+
+	if(rank == 0)
+	{
+		gettimeofday(&result->finish_time, NULL);
+		calc_runtime(result);
 	}
 
 	return result;
@@ -125,4 +142,19 @@ int get_stats(int step, struct StepResult **last_result, struct SimulationResult
 	MPI_Bcast(&died, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 	return died;
+}
+
+/**
+ * calculate the time, the simulation took
+ */
+void calc_runtime(struct SimulationResult *result)
+{
+	result->run_time.tv_sec = result->finish_time.tv_sec - result->start_time.tv_sec;
+	result->run_time.tv_usec = result->finish_time.tv_usec - result->start_time.tv_usec;
+
+	if(result->run_time.tv_usec < 0)
+	{
+		result->run_time.tv_sec--;
+		result->run_time.tv_usec = result->start_time.tv_usec - result->finish_time.tv_usec;
+	}
 }

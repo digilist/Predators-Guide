@@ -154,12 +154,16 @@ void _init_segment()
 	_segment->width = segment_width;
 	_segment->height = segment_height;
 
+	// for modulo calculations
+	rank++;
+
 	// if cols not devide width make the last column a little bigger
 	if(map->width % _cols != 0)
 	{
 		// but only if this process simulates a segment in the last column
 		if(rank % _cols == 0)
 		{
+			printf("asdfa %d\n", get_rank());
 			int diff = map->width - _cols * segment_width;
 
 			_segment->width += diff;
@@ -168,7 +172,7 @@ void _init_segment()
 	}
 
 	// if rows not devide height make the last column a little bigger
-	if(map->height % _rows != 0)
+	if(rank > 0 &&  map->height % _rows != 0)
 	{
 		// but only if this process simulates a segment in the last row
 		if(rank > (_rows-1) * _cols)
