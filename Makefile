@@ -10,10 +10,10 @@ all: compile mpi
 compile: main.c
 	$(MPICC) $(CFLAGS)
 
-run: compile
+run: predators.out
 	./predators.out
 
-mpi: compile
+mpi: predators.out
 	mpiexec -n $(p) ./predators.out
 
 valgrind: predators.out

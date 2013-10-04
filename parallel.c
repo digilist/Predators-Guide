@@ -6,7 +6,9 @@
 #include "parallel.h"
 #include "map.h"
 
-#define NUMBER_OF_RCV_THREADS 2
+#define NUMBER_OF_RCV_THREADS 1
+
+#define _send_field(field, dest_rank) __send_field(field, dest_rank, __func__)
 
 int _rank = -1;
 int _num_processes;
@@ -23,7 +25,7 @@ MPI_Op			MPI_Op_Sum_StepResult;
 int snd = 0;
 int rcv = 0;
 
-void _send_field(struct Field *field, int dest_rank);
+void __send_field(struct Field *field, int dest_rank, const char* caller);
 
 void _create_mpi_types();
 void _create_mpi_struct_field();
@@ -137,13 +139,13 @@ int get_dest_rank(enum Direction direction, int origin)
 	}
 	else if(direction == UP)
 	{
-		origin = (origin + get_cols()) % (get_rows() * get_cols());
-	}
-	else if(direction == DOWN)
-	{
 		origin = origin - get_cols();
 		if(origin < 0) // there is no modulo for negative numbers
 			origin = (get_rows() * get_cols()) + origin;
+	}
+	else if(direction == DOWN)
+	{
+		origin = (origin + get_cols()) % (get_rows() * get_cols());
 	}
 
 	origin++;
@@ -176,6 +178,7 @@ void send_field(struct Field *field)
 		return;
 
 	struct Segment *segment = get_segment();
+	struct Map *map = get_map();
 	int owner = get_field_process(field);
 
 	if(owner == my_rank)
@@ -203,7 +206,7 @@ void send_field(struct Field *field)
 		}
 		else if(field->x > segment->x2)
 		{
-			if(segment->x1 == 0) // must be behind the left border (floats around the map)
+			if(field->x == map->width - 1) // must be behind the left border (floats around the map)
 			{
 				left = 1;
 			}
@@ -234,7 +237,7 @@ void send_field(struct Field *field)
 		}
 		else if(field->y > segment->y2)
 		{
-			if(segment->y1 == 0) // must be behind the left border (floats around the map)
+			if(field->y == map->height - 1) // must be behind the upper border (floats around the map)
 			{
 				up = 1;
 			}
@@ -251,6 +254,8 @@ void send_field(struct Field *field)
 		{
 			down = 1;
 		}
+
+//		printf("%d: send field %dx%d to %d %d %d %d\n", get_rank(), field->x, field->y, left, right, up, down);
 
 		if(left)
 			_send_field(field, get_dest_rank(LEFT, my_rank));
@@ -312,12 +317,12 @@ void send_field_into_direction(struct Field *field, enum Direction direction)
 /**
  * helper function to send the field
  */
-void _send_field(struct Field *field, int dest_rank)
+void __send_field(struct Field *field, int dest_rank, const char* caller)
 {
 	if(dest_rank != get_rank()) // don't send to myself
 	{
 		output("%d: send %dx%d (Population Type %d, Age %d) to %d\n", get_rank(), field->x, field->y, field->population_type, field->age, dest_rank);
-		MPI_Ssend(field, 1, MPI_Struct_Field, dest_rank, FIELD, MPI_COMM_WORLD);
+		MPI_Send(field, 1, MPI_Struct_Field, dest_rank, FIELD, MPI_COMM_WORLD);
 		snd++;
 	}
 }

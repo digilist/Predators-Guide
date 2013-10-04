@@ -37,26 +37,8 @@ void simulation_step(int step)
 	struct Segment *segment = get_segment();
 
 	int fields = segment->width * segment->height;
-	struct Field *movements[fields];
+	struct Field **movements = malloc(sizeof(struct Field *) * fields);
 	get_random_movement_order(movements, fields);
-
-//	if(get_rank() == 1)
-//	{
-//		printf("---------\n");
-//
-////		sleep(3);
-////		print_all_fields(0);
-////		print_all_fields(1);
-//		struct Field *field = get_field(1, 1);
-//		struct Field *target = get_field(3, 3);
-//		printf("move\n");
-//		printf("%d\n", move_animal(&field));
-////		sleep(3);
-//
-//		printf("--------\n");
-//	}
-//
-//	return;
 
 	int food = 0;
 	for (int i = 0; i < fields; i++)
@@ -70,13 +52,6 @@ void simulation_step(int step)
 			// suche nach Beute
 		}
 	}
-
-//	free(movements);
-
-//	movements = get_random_movement_order(map);
-
-	int birth = 0;
-	int die = 0;
 
 	for (int i = 0; i < fields; i++)
 	{
@@ -101,21 +76,19 @@ void simulation_step(int step)
 					}
 				}
 			}
-//
+
 			if(field != 0)
 			{
 				// check, whether the animal is old enough and should get a child
 				if (should_get_child(field->population_type))
 				{
 					create_child(field);
-					birth++;
 				}
-//
-//				// if the animal becomes to old or starves, it will die
+
+				// if the animal becomes to old or starves, it will die
 				if (should_die(field))
 				{
 					reset_field(field);
-					die++;
 				}
 				else
 				{
@@ -133,7 +106,7 @@ void simulation_step(int step)
 		}
 	}
 
-//	printf("%d: food %d, birth %d, die %d\n", get_rank(), food, birth, die);
+	free(movements);
 }
 
 /**

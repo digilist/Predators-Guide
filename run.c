@@ -23,9 +23,6 @@ struct SimulationResult* run_simulation()
 		init_map();
 	}
 
-
-	printf("%d: foo\n", get_rank());
-
 	MPI_Barrier(MPI_COMM_WORLD);
 
 	int i = 0;
@@ -37,35 +34,6 @@ struct SimulationResult* run_simulation()
 	}
 
 	died = get_stats(i, &last_result, result);
-
-//	if(rank > 0)
-//	{
-//		print_all_fields(0);
-//		sleep(2);
-//		printf("------------------\n");
-//		DEBUG = 1;
-//
-//		struct Field *field;
-//		if(rank == 1)
-//		{
-//			field = get_field(1, 1);
-//			printf("moved %d\n", move_animal(&field));
-//
-//			printf("------------------\n");
-//		}
-//		if(rank == 3)
-//		{
-//			field = get_field(0, 1);
-//			printf("moved %d\n", move_animal(&field));
-//		}
-//		sleep(1);
-//		print_all_fields(0);
-//	}
-//
-//	died = get_stats(i, &last_result, result);
-//
-//	return 0;
-
 
 	while(i < MAX_SIMULATION_STEPS && !died)
 	{
@@ -88,7 +56,6 @@ struct SimulationResult* run_simulation()
 		// barrier to ensure, simulation continues only when all processes are ready
 		// not needed, because of MPI_Bcast in get_stats() ?!?
 //		MPI_Barrier(MPI_COMM_WORLD);
-
 
 //		int flag = 0;
 //		MPI_Status status;
