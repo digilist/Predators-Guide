@@ -18,10 +18,7 @@ struct SimulationResult* run_simulation()
 	struct SimulationResult *result = malloc(sizeof(struct SimulationResult));
 	struct StepResult *last_result = 0;
 
-	if(rank > 0 || num_processes == 1)
-	{
-		init_map();
-	}
+	init_map();
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
@@ -42,8 +39,7 @@ struct SimulationResult* run_simulation()
 		if(rank == 0)
 			printf("Simulation Step %d\n", i);
 
-		if(rank > 0 || num_processes == 1)
-			simulation_step(i);
+		simulation_step(i);
 
 		MPI_Barrier(MPI_COMM_WORLD);
 		died = get_stats(i, &last_result, result);

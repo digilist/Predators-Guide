@@ -70,7 +70,6 @@ void init_map()
 	_init_fields();
 
 	start_rcv();
-
 	_init_population();
 }
 
@@ -83,23 +82,6 @@ void _init_segment()
 
 	int num_simulators = get_num_processes();
 	int rank = get_rank();
-
-	if(num_simulators > 1)
-		num_simulators--;
-
-	// if there's only one process, the segment calculation differs a litte bit
-	if(rank == 0)
-	{
-		if(num_simulators == 1)
-		{
-			rank = 1; // just for calculations
-		}
-		else
-		{
-			output("Process 0 isn't allowed to get a simulation segment!\n");
-			exit(1);
-		}
-	}
 
 	_rows = 1;
 	_cols = 1;
@@ -153,7 +135,7 @@ void _init_segment()
 		_rows = primes[1];
 	}
 
-	if(rank == 1)
+	if(rank == 0)
 	{
 		printf("Splitting Map into %d cols and %d rows\n", _cols, _rows);
 	}
@@ -165,9 +147,9 @@ void _init_segment()
 
 	_segment = malloc(sizeof(struct Segment));
 
-	_segment->x1 = ((rank-1) % _cols) * segment_width;
+	_segment->x1 = (rank % _cols) * segment_width;
 	_segment->x2 = _segment->x1 + segment_width - 1;
-	_segment->y1 = ((rank-1) / _cols) * segment_height;
+	_segment->y1 = (rank / _cols) * segment_height;
 	_segment->y2 = _segment->y1 + segment_height - 1;
 	_segment->width = segment_width;
 	_segment->height = segment_height;

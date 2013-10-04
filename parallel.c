@@ -105,7 +105,7 @@ int get_field_process(struct Field *field)
 	int col = field->x / (map->width / get_cols());
 	int row = field->y / (map->height / get_rows());
 
-	int p = get_rows() * row + col + 1; // plus 1, because the master simulates no process
+	int p = get_rows() * row + col; // plus 1, because the master simulates no process
 
 	return p;
 }
@@ -119,7 +119,6 @@ int get_dest_rank(enum Direction direction, int origin)
 	// origin will be transformed to destination
 
 	// to simplyfy calculations, will be added later
-	origin--;
 
 	int row_start = get_cols() * (origin / get_cols());
 	int row_end = get_cols() * (origin / get_cols()) + get_cols() - 1;
@@ -147,8 +146,6 @@ int get_dest_rank(enum Direction direction, int origin)
 	{
 		origin = (origin + get_cols()) % (get_rows() * get_cols());
 	}
-
-	origin++;
 
 	if(direction == DOWN_LEFT)
 	{
