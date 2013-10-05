@@ -2,8 +2,10 @@
 #include <stdlib.h>
 
 #include "config.h"
+#include "helpers.h"
 #include "simulation.h"
 #include "map.h"
+#include "fields.h"
 #include "result.h"
 #include "parallel.h"
 
@@ -15,10 +17,10 @@ struct Coordinates
 
 struct StepResult* calculate_step_result(int step);
 
-void get_random_movement_order(struct Field **movements, int fields);
+void get_movement_order(struct Field **movements, int fields);
+void shuffle(void **elements, int count);
 
 struct Field* check_for_food(struct Field *field);
-
 struct Field* move_animal(struct Field *field);
 
 void create_child(struct Field *field);
@@ -29,7 +31,7 @@ struct Field* get_random_empty_neighboring_field(struct Field *field);
 struct Field* get_neighboring_field_in_direction(int x, int y, enum Direction direction);
 
 /**
- * Simulation eines einzelnen Schrites auf dem Spielfeld
+ * simulate a single step
  *
  */
 void simulation_step(int step)
@@ -38,7 +40,7 @@ void simulation_step(int step)
 
 	int fields = segment->width * segment->height;
 	struct Field **movements = malloc(sizeof(struct Field *) * fields);
-	get_random_movement_order(movements, fields);
+	get_movement_order(movements, fields);
 
 	for (int i = 0; i < fields; i++)
 	{
@@ -52,13 +54,14 @@ void simulation_step(int step)
 		}
 	}
 
+	get_movement_order(movements, fields);
 	for (int i = 0; i < fields; i++)
 	{
 		struct Field *field = movements[i];
 
 		if (field->population_type != EMPTY)
 		{
-			// hat sich dieses Tier diese Runde schon einmal bewegt? (vorher durchs Fressen oder durch eine Bewegung auf dieses Feld)
+			// has the animal on this field been moved before? (e.g. because it has found food)
 			if(field->last_step < step)
 			{
 				struct Field *moved = move_animal(field);
@@ -109,8 +112,7 @@ void simulation_step(int step)
 }
 
 /**
- * berechnet das Ergebnis der Runde
- * (wieviele Pflanzen, Beute und Jäger gibt es danach es)
+ * get a result (amount of animals / plants) of the current simulation step
  *
  */
 struct StepResult* calculate_step_result(int step)
@@ -163,7 +165,7 @@ int should_die(struct Field *field)
 }
 
 /**
- * soll für die gegebene Rasse ein Kind geboren werden?
+ * calculate, if the population_type should create a new child
  *
  */
 int should_get_child(int population_type)
@@ -173,10 +175,10 @@ int should_get_child(int population_type)
 }
 
 /**
- * bringe alle Felder in eine zufällige Reihenfolge,
- * um ein zufälligeres Verhalten bei den Bewegungen zu erzeugen
+ * get a shuffled list of all fields, to create a preferably random behaviour
+ *
  */
-void get_random_movement_order(struct Field **movements, int fields)
+void get_movement_order(struct Field **movements, int fields)
 {
 	struct Segment *segment = get_segment();
 
@@ -190,21 +192,15 @@ void get_random_movement_order(struct Field **movements, int fields)
 		}
 	}
 
-	// shuffle
-	for (i = fields - 1; i >= 0; i--)
-	{
-		int j = rand() % fields;
-		struct Field *tmp = movements[j];
-		movements[j] = movements[i];
-		movements[i] = tmp;
-	}
+	shuffle((void **) movements, fields);
 }
 
 /**
- * Suche nach Beute auf Nachbarfeldern und fresse sie falls vorhanden,
- * dabei geht er auf das Feld der Beute und hat seine Bewegung beendet
+ * search for prey on any neighboring field and eat it, if there is one
+ * when the animal eats the prey, it will move forward to the neighboring field
+ * and returns it new position
  *
- * wurde Beute gefunden und gefressen, wird die neue Position zurückgegeben, andernfalls 0
+ * otherwise, this method will return 0
  */
 struct Field* check_for_food(struct Field *field)
 {
@@ -214,7 +210,7 @@ struct Field* check_for_food(struct Field *field)
 
 		if(field->population_type == PREDATOR)
 		{
-			if (neighboring_field->population_type == PREY) // Pflanzenfresser frisst Pflanze
+			if (neighboring_field->population_type == PREY) // Predator eats prey
 			{
 				field->last_step++;
 				field->energy = MAX_ENERGY;
@@ -225,7 +221,7 @@ struct Field* check_for_food(struct Field *field)
 		}
 		else if(field->population_type == PREY)
 		{
-			if (neighboring_field->contains_plant) // Pflanzenfresser frisst Pflanze
+			if (neighboring_field->contains_plant) // Prey eats Plants
 			{
 				field->last_step++;
 				field->energy = MAX_ENERGY;
@@ -259,7 +255,8 @@ struct Field* move_animal(struct Field *field)
 }
 
 /**
- * Ein Kind derselben Klasse auf einem zufälligen Nachbarfeld gebähren
+ * create a child on any empty neighboring field
+ *
  */
 void create_child(struct Field *field)
 {
@@ -274,7 +271,7 @@ void create_child(struct Field *field)
 }
 
 /**
- * gibt ein zufälliges benachbartes Feld zurück
+ * get a random neighboring field
  *
  */
 struct Field* get_random_neighboring_field(struct Field *field)
@@ -286,8 +283,7 @@ struct Field* get_random_neighboring_field(struct Field *field)
 }
 
 /**
- * gibt ein zufälliges benachbartes Feld zurück, das noch frei ist
- * ist keines mehr frei, wird 0 zurückgegeben
+ * get a random and empty neighboring field
  *
  */
 struct Field* get_random_empty_neighboring_field(struct Field *field)

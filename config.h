@@ -27,10 +27,4 @@ extern const float DYING_RATE[]; // Sterbewahrscheinlichkeit: 1/x
 
 extern const int MAX_PLANT_AGE; // max. Alter einer Pflanze
 
-int random_int(int low, int high);
-void output(const char* format, ...);
-
-void print_all_fields(int borders);
-void print_field(struct Field *field);
-
 #endif

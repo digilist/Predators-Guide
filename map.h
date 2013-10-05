@@ -3,8 +3,6 @@
 #ifndef MAP_H_INCLUDED
 #define MAP_H_INCLUDED
 
-#define get_field(x, y) _get_field(x, y, __func__)
-
 /**
  * Repräsentiert das Spielfeld
  *
@@ -74,18 +72,6 @@ struct Map* get_map();
 struct Segment* get_segment();
 int get_cols();
 int get_rows();
-
-struct Field* _get_field(int x, int y, const char *caller);
-int is_field_in_segment(struct Field *field);
-
-void copy_field_to(struct Field *source_field, struct Field *target_field);
-
-void move_field_to(struct Field *source_field, struct Field *target_field);
-
-void reset_field(struct Field *field);
-
-int is_near_border(struct Field *field);
-int is_border_field(struct Field *field);
 
 void print_bitmap(int step);
 

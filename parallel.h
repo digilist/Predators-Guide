@@ -1,5 +1,6 @@
 #include <mpi.h>
-#include "map.h"
+
+#include "fields.h"
 #include "simulation.h"
 
 #ifndef PARALLEL_H_INCLUDED

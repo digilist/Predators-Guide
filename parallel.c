@@ -3,8 +3,9 @@
 #include <mpi.h>
 #include <pthread.h>
 
+#include "helpers.h"
 #include "parallel.h"
-#include "map.h"
+#include "fields.h"
 
 #define NUMBER_OF_RCV_THREADS 1
 
