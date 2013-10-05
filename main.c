@@ -3,6 +3,8 @@
 #include <string.h>
 #include <time.h>
 
+#include <unistd.h>
+
 #include "config.h"
 #include "map.h"
 #include "run.h"
@@ -10,7 +12,6 @@
 
 #include "parallel.h"
 
-void init_filesystem();
 void create_video();
 
 /*
@@ -20,8 +21,6 @@ void create_video();
  */
 int main(int argc, char *argv[])
 {
-//	initFilesystem();
-
 	int rank = init_parallel(argc, argv);
 
 	// init random and inluce the process rank (rank+1, to prevent a 0-result for the root process)
@@ -46,20 +45,7 @@ int main(int argc, char *argv[])
 		save_result(result);
 	}
 
-	//createVideo();
-
 	return 0;
-}
-
-void init_filesystem()
-{
-	char buffer[256];
-
-	sprintf(buffer, "rm -rf %s*", SAVE_PATH);
-	system(buffer);
-
-	sprintf(buffer, "mkdir -p %s", SAVE_PATH);
-	system(buffer);
 }
 
 void create_video()

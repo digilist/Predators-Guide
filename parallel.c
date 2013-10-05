@@ -41,14 +41,18 @@ int _get_offset(void* t_struct, void* element);
  */
 int init_parallel(int argc, char *argv[])
 {
-	int provided;
-	MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-	if(provided < MPI_THREAD_MULTIPLE)
-		exit(1);
-
 	for(int i = 0; i < NUMBER_OF_RCV_THREADS; i++)
 	{
 		pthread_rcv[i] = 0;
+	}
+
+	int provided;
+	MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+	if(provided < MPI_THREAD_SERIALIZED) // .... multiple doesn't work on cluster ?!
+	{
+		printf("MPI just provied Thread Level %d but needed %d\n", provided, MPI_THREAD_MULTIPLE);
+		finish_parallel();
+		exit(1);
 	}
 
 	_create_mpi_types();
@@ -171,9 +175,6 @@ int get_dest_rank(enum Direction direction, int origin)
 void send_field(struct Field *field)
 {
 	int my_rank = get_rank();
-
-	if(my_rank == 0)
-		return;
 
 	struct Segment *segment = get_segment();
 	struct Map *map = get_map();

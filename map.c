@@ -58,6 +58,9 @@ int get_rows()
  */
 void init_map()
 {
+	if(_map != 0)
+		return;
+
 	sprintf(abstract_bitmap_filepath, "%s%s", SAVE_PATH, BITMAP_FILENAME);
 
 	_map = malloc(sizeof(struct Map));

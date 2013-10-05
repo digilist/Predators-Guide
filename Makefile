@@ -1,5 +1,6 @@
 CC = /usr/bin/gcc
 MPICC = /usr/bin/mpicc
+MPIEXEC = /usr/bin/mpiexec
 CFLAGS = -Wall -lpthread -lm -std=c99 -g -o predators.out *.c
 
 export LD_LIBRARY_PATH=/usr/lib/openmpi/:$LD_LIBRARY_PATH
@@ -14,11 +15,14 @@ run: predators.out
 	./predators.out
 
 mpi: predators.out
-	mpiexec -n $(p) ./predators.out
+	$(MPIEXEC) -n $(p) ./predators.out
+
+sync: main.c
+	rsync --delete -avze 'ssh' . wr:predators-guide/
 
 valgrind: predators.out
 	make compile
-	mpiexec -n $(p) valgrind --tool=memcheck ./predators.out
+	$(MPIEXEC) -n $(p) valgrind --tool=memcheck ./predators.out
 
 plot: predators.out
 	gnuplot pred.plot

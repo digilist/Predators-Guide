@@ -138,7 +138,7 @@ int get_stats(int step, struct StepResult **last_result, struct SimulationResult
 		}
 	}
 
-	// broad cast died to all processes
+	// broadcast to all processes, whether one species died
 	MPI_Bcast(&died, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 	return died;
