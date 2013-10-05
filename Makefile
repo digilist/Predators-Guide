@@ -4,7 +4,7 @@ MPIEXEC = /usr/bin/mpiexec
 CFLAGS = -Wall -lpthread -lm -std=c99 -g -o predators.out *.c
 
 export LD_LIBRARY_PATH=/usr/lib/openmpi/:$LD_LIBRARY_PATH
-p=5
+p=1
 
 all: compile mpi
 

@@ -38,14 +38,18 @@ void simulation_step(int step)
 {
 	struct Segment *segment = get_segment();
 
+	irecv_field();
+
 	int fields = segment->width * segment->height;
 	struct Field **movements = malloc(sizeof(struct Field *) * fields);
 	get_movement_order(movements, fields);
 
 	for (int i = 0; i < fields; i++)
 	{
-		probe_recv_field();
 		struct Field *field = movements[i];
+
+		if(is_near_border(field))
+			irecv_field();
 
 		if (field->population_type != EMPTY)
 		{
@@ -58,6 +62,9 @@ void simulation_step(int step)
 	for (int i = 0; i < fields; i++)
 	{
 		struct Field *field = movements[i];
+
+		if(is_near_border(field))
+			irecv_field();
 
 		if (field->population_type != EMPTY)
 		{
@@ -94,7 +101,7 @@ void simulation_step(int step)
 				}
 				else
 				{
-					field->energy--;
+					field->energy -= 2;
 					field->age++;
 				}
 			}
@@ -107,6 +114,8 @@ void simulation_step(int step)
 			}
 		}
 	}
+
+	irecv_field();
 
 	free(movements);
 }
@@ -195,6 +204,12 @@ void get_movement_order(struct Field **movements, int fields)
 	shuffle((void **) movements, fields);
 }
 
+void fight(struct Field *predator, struct Field *prey);
+void fight(struct Field *predator, struct Field *prey)
+{
+
+}
+
 /**
  * search for prey on any neighboring field and eat it, if there is one
  * when the animal eats the prey, it will move forward to the neighboring field
@@ -212,6 +227,10 @@ struct Field* check_for_food(struct Field *field)
 		{
 			if (neighboring_field->population_type == PREY) // Predator eats prey
 			{
+
+				// fight!
+				fight(field, neighboring_field);
+
 				field->last_step++;
 				field->energy = MAX_ENERGY;
 				move_field_to(field, neighboring_field);
@@ -266,7 +285,7 @@ void create_child(struct Field *field)
 		neighboring_field->population_type = field->population_type;
 		neighboring_field->energy = MAX_ENERGY;
 
-		send_field_if_border(neighboring_field);
+		send_field(neighboring_field);
 	}
 }
 

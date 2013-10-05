@@ -13,6 +13,8 @@
  */
 int random_int(const int low, const int high)
 {
+//	srand((unsigned) time(0) * (get_rank() + 1));
+
 	return low + (double)rand () * (high - low + 1) / RAND_MAX;
 }
 

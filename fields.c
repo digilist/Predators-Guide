@@ -219,3 +219,26 @@ int is_border_field(struct Field *field)
 
 	return -1;
 }
+
+/**
+ * checks, whether the given field is in the near
+ * of our segment border
+ *
+ */
+int is_near_border(struct Field *field)
+{
+	int max_diff = 1;
+	struct Segment *segment = get_segment();
+
+	if((field->x - segment->x1) <= max_diff)
+		return 1;
+	if((segment->x1 - field->x) <= max_diff)
+		return 1;
+	if((field->y - segment->y1) <= max_diff)
+		return 1;
+	if((segment->y1 - field->y) <= max_diff)
+		return 1;
+
+	return 0;
+}
+

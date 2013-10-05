@@ -29,7 +29,9 @@ int get_dest_rank(enum Direction direction, int origin);
 void send_field(struct Field *field);
 void send_field_into_direction(struct Field *field, enum Direction direction);
 void send_field_if_border(struct Field *field);
+
 void recv_field();
+int irecv_field();
 void probe_recv_field();
 
 void start_rcv();

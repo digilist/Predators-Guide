@@ -70,7 +70,6 @@ void init_map()
 	_init_segment();
 	_init_fields();
 
-	start_rcv();
 	_init_population();
 }
 
@@ -121,6 +120,7 @@ void _init_segment()
 			p++;
 		}
 
+		// reduce all prime factors to 2 values
 		for(int i = 1; i < p; i++)
 		{
 			primes[0] *= primes[i];
@@ -200,6 +200,7 @@ void _init_fields()
 	int fields = (segment->width + 2) * (segment->height + 2);
 	map->fields = calloc(fields, sizeof(struct Field));
 
+	// init all fields which are directly in the current segment
 	for (int i = 0; i < segment->width; i++)
 	{
 		int x = segment->x1 + i;
@@ -215,7 +216,7 @@ void _init_fields()
 		}
 	}
 
-	// borders
+	// outer borders
 	for (int i = -1 ; i < segment->width + 1; i++)
 	{
 		// upper border
@@ -315,10 +316,7 @@ void _init_population()
 
 	exchange_border_fields();
 
-	output("%d: Spawned %d Prey\n", get_rank(), counter[PREY]);
-	output("           %d Predators\n", counter[PREDATOR]);
-	output("           %d Plants\n", plants);
-	output("           %d Empty\n", counter[EMPTY]);
+	printf("%d: Spawned %d Predators / %d Prey / %d Plants / %d Empty\n", get_rank(), counter[PREDATOR], counter[PREY], plants, counter[EMPTY]);
 }
 
 /**

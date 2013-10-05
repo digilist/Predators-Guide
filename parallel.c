@@ -26,6 +26,9 @@ MPI_Op			MPI_Op_Sum_StepResult;
 int snd = 0;
 int rcv = 0;
 
+struct Field _ircv_field;
+MPI_Request *_ircv_request = 0;
+
 void __send_field(struct Field *field, int dest_rank, const char* caller);
 
 void _create_mpi_types();
@@ -46,14 +49,16 @@ int init_parallel(int argc, char *argv[])
 		pthread_rcv[i] = 0;
 	}
 
-	int provided;
-	MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-	if(provided < MPI_THREAD_SERIALIZED) // .... multiple doesn't work on cluster ?!
-	{
-		printf("MPI just provied Thread Level %d but needed %d\n", provided, MPI_THREAD_MULTIPLE);
-		finish_parallel();
-		exit(1);
-	}
+//	int provided;
+//	MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+//	if(provided < MPI_THREAD_SERIALIZED) // .... multiple doesn't work on cluster ?!
+//	{
+//		printf("MPI just provied Thread Level %d but needed %d\n", provided, MPI_THREAD_MULTIPLE);
+//		finish_parallel();
+//		exit(1);
+//	}
+
+	MPI_Init(&argc, &argv);
 
 	_create_mpi_types();
 
@@ -282,9 +287,6 @@ void send_field(struct Field *field)
  */
 void send_field_into_direction(struct Field *field, enum Direction direction)
 {
-	if(get_rank() == 0)
-		return;
-
 	// can be send to multiple processes
 
 	if(direction == UP_LEFT || direction == UP_RIGHT || direction == UP)
@@ -318,7 +320,7 @@ void send_field_into_direction(struct Field *field, enum Direction direction)
  */
 void __send_field(struct Field *field, int dest_rank, const char* caller)
 {
-	if(dest_rank != get_rank()) // don't send to myself
+	if(dest_rank != get_rank()) // don't send to the current process itself
 	{
 		output("%d: send %dx%d (Population Type %d, Age %d) to %d\n", get_rank(), field->x, field->y, field->population_type, field->age, dest_rank);
 		MPI_Send(field, 1, MPI_Struct_Field, dest_rank, FIELD, MPI_COMM_WORLD);
@@ -341,7 +343,7 @@ void send_field_if_border(struct Field *field)
 }
 
 /**
- * receive a field from another process
+ * receive a field from another process (blocking)
  *
  */
 void recv_field()
@@ -353,6 +355,43 @@ void recv_field()
 	rcv++;
 
 	copy_field_to(&rcv_field, get_field(rcv_field.x, rcv_field.y));
+}
+
+/**
+ * receive a field from another process (nonblocking)
+ *
+ * returns the number of received fields
+ */
+int irecv_field()
+{
+	if(get_num_processes() == 1)
+		return 0;
+
+	if(_ircv_request == 0)
+	{
+		_ircv_request = malloc(sizeof(MPI_Request));
+		MPI_Irecv(&_ircv_field, 1, MPI_Struct_Field, MPI_ANY_SOURCE, FIELD, MPI_COMM_WORLD, _ircv_request);
+	}
+
+	int received = 0;
+	MPI_Status status;
+	MPI_Request_get_status(*_ircv_request, &received, &status);
+
+	if(received)
+	{
+		copy_field_to(&_ircv_field, get_field(_ircv_field.x, _ircv_field.y));
+
+		rcv++;
+		output("%d: ireceived %dx%d, border: %d\n", get_rank(), _ircv_field.x, _ircv_field.y, is_border_field(&_ircv_field));
+
+		free(_ircv_request);
+		_ircv_request = 0;
+
+		// check if there are more messages...
+		return irecv_field() + 1;
+	}
+
+	return 0;
 }
 
 /**
@@ -415,7 +454,7 @@ void terminate_rcv()
  */
 void exchange_border_fields()
 {
-	if(get_rank() == 0 || get_num_processes() <= 2)
+	if(get_num_processes() == 1) // if there is only one process, there is no need to receive fields
 		return;
 
 	struct Segment *segment = get_segment();
@@ -424,14 +463,16 @@ void exchange_border_fields()
 	{
 		for(int x = segment->x1; x <= segment->x2; x++)
 		{
+			irecv_field();
+
 			// upper border
 			send_field(get_field(x, segment->y1));
 
 			// lower border
 			send_field(get_field(x, segment->y2));
 
-//			recv_field();
-//			recv_field();
+			// receive from other processes
+			irecv_field();
 		}
 	}
 
@@ -446,13 +487,9 @@ void exchange_border_fields()
 			send_field(get_field(segment->x2, y));
 
 			// receive from other processes
-//			recv_field();
-//			recv_field();
+			irecv_field();
 		}
 	}
-
-//	for(int i = 0; i < 16; i++)
-//		recv_field();
 }
 
 /**

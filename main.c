@@ -24,8 +24,8 @@ int main(int argc, char *argv[])
 	int rank = init_parallel(argc, argv);
 
 	// init random and inluce the process rank (rank+1, to prevent a 0-result for the root process)
-//	srand((unsigned) time(0) * (rank + 1));
-	srand((unsigned) rank);
+	srand((unsigned) time(0) * (rank + 1));
+//	srand((unsigned) rank);
 
 	if(rank == 0)
 	{
