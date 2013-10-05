@@ -41,6 +41,7 @@ struct SimulationResult* run_simulation()
 	{
 		printf("Start Population\n");
 	}
+
 	died = get_stats(i, &last_result, result);
 
 	while(i < MAX_SIMULATION_STEPS && !died)
@@ -52,8 +53,8 @@ struct SimulationResult* run_simulation()
 
 		simulation_step(i);
 
-		MPI_Barrier(MPI_COMM_WORLD);
 		died = get_stats(i, &last_result, result);
+		MPI_Barrier(MPI_COMM_WORLD);
 
 		if(num_processes == 1)
 		{
@@ -69,9 +70,7 @@ struct SimulationResult* run_simulation()
 //		MPI_Iprobe(MPI_ANY_SOURCE, FIELD, MPI_COMM_WORLD, &flag, &status);
 	}
 
-	printf("%d: a\n", get_rank());
 	MPI_Barrier(MPI_COMM_WORLD);
-	printf("%d: b\n", get_rank());
 
 	if(rank == 0)
 	{

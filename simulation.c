@@ -68,39 +68,39 @@ void simulation_step(int step)
 
 		if (field->population_type != EMPTY)
 		{
-			// has the animal on this field been moved before? (e.g. because it has found food)
-			if(field->last_step < step)
+			// if the animal becomes to old or starves, it will die
+			if (should_die(field))
 			{
-				struct Field *moved = move_animal(field);
-				if(moved != 0)
-				{
-					field->last_step++;
-					if(is_field_in_segment(moved))
-					{
-						field = moved;
-					}
-					else
-					{
-						field = 0; // animal has moved, but is now out of our segment
-					}
-				}
+				reset_field(field);
 			}
-
-			if(field != 0)
+			else
 			{
-				// check, whether the animal is old enough and should get a child
-				if (should_get_child(field->population_type))
+				// has the animal on this field been moved before? (e.g. because it has found food)
+				if(field->last_step < step)
 				{
-					create_child(field);
+					struct Field *moved = move_animal(field);
+					if(moved != 0)
+					{
+						field->last_step++;
+						if(is_field_in_segment(moved))
+						{
+							field = moved;
+						}
+						else
+						{
+							field = 0; // animal has moved, but is now out of our segment
+						}
+					}
 				}
 
-				// if the animal becomes to old or starves, it will die
-				if (should_die(field))
+				if(field != 0)
 				{
-					reset_field(field);
-				}
-				else
-				{
+					// check, whether the animal is old enough and should get a child
+					if (should_get_child(field->population_type))
+					{
+						create_child(field);
+					}
+
 					field->energy -= 2;
 					field->age++;
 				}
@@ -204,10 +204,52 @@ void get_movement_order(struct Field **movements, int fields)
 	shuffle((void **) movements, fields);
 }
 
-void fight(struct Field *predator, struct Field *prey);
-void fight(struct Field *predator, struct Field *prey)
-{
+int fight(struct Field *predator, struct Field *prey);
 
+/**
+ * let a predator fight with a prey
+ * returns 1, if the predator wins and eats the prey
+ *
+ * always one creature will die!
+ */
+int fight(struct Field *predator, struct Field *prey)
+{
+	int predator_strengh = predator->energy + MAX_ENERGY;
+	int prey_strengh = prey->energy;
+
+	int predator_energy = predator->energy * 3; // predators have a bonus
+	int prey_energy = prey->energy;
+
+	int rounds = 0;
+	while(predator_energy > 0 && prey_energy > 0)
+	{
+		int x = random_int(0, predator_strengh);
+		int y = random_int(0, prey_strengh);
+
+		if(x > y) // predator wins
+		{
+			prey_energy -= 3;
+		}
+		else if(x < y) // prey wins
+		{
+			predator_energy -= 2;
+		}
+		else // remis
+		{
+			predator_energy--;
+			prey_energy--;
+		}
+
+		rounds++;
+	}
+
+	if(prey_energy > 0)
+	{
+		prey->energy = prey_energy;
+		return 0;
+	}
+
+	return 1;
 }
 
 /**
@@ -227,15 +269,18 @@ struct Field* check_for_food(struct Field *field)
 		{
 			if (neighboring_field->population_type == PREY) // Predator eats prey
 			{
-
 				// fight!
-				fight(field, neighboring_field);
-
-				field->last_step++;
-				field->energy = MAX_ENERGY;
-				move_field_to(field, neighboring_field);
-
-				return neighboring_field;
+				if(fight(field, neighboring_field))
+				{
+					field->energy = MAX_ENERGY;
+					field->last_step++;
+					move_field_to(field, neighboring_field);
+				}
+				else
+				{
+					reset_field(field);
+					return 0;
+				}
 			}
 		}
 		else if(field->population_type == PREY)

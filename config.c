@@ -8,37 +8,32 @@ const int PRINTING_ENABLED = 0;
 const char SAVE_PATH[] = "/tmp/pred/"; // Pfad zu Ordner für Bitmap-Erzeugung mit abschließendem /
 const char BITMAP_FILENAME[] = "%d.bmp"; // Dateiname für Bitmap (muss ein %d für die Nummer des Schrittes enthalten)
 
-const int MAP_WIDTH = 100; // Breite der Karte
-const int MAP_HEIGHT = 100; // Höhe der Karte
+const int MAP_WIDTH = 500; // Breite der Karte
+const int MAP_HEIGHT = 500; // Höhe der Karte
 const int SCALE_FACTOR = 1; // Skalierungsfaktor für die Bildausgabe
-const int MAX_SIMULATION_STEPS = 500; // Anzahl der Simulationsschritte
+const int MAX_SIMULATION_STEPS = 50; // Anzahl der Simulationsschritte
 
 const float MAP_FILL_RATE = 0.3;
-const float PREDATOR_RATE = 0.2; // an der MAP_FILL_RATE
-const float PREY_RATE = 0.4; // an der MAP_FILL_RATE
-const float PLANT_RATE = 0.05; // an der Gesamtmap
-
-//const float MAP_FILL_RATE = 1;
-//const float PREDATOR_RATE = 0.5; // an der MAP_FILL_RATE
-//const float PREY_RATE = 0.5; // an der MAP_FILL_RATE
-//const float PLANT_RATE = 0.5; // an der Gesamtmap
+const float PREDATOR_RATE = 0.5; // an der MAP_FILL_RATE
+const float PREY_RATE = 0.5; // an der MAP_FILL_RATE
+const float PLANT_RATE = 0.1; // an der Gesamtmap
 
 const int ELDERLY_AGE[NUMBER_OF_POPULATION_TYPES] = {
 	0, // EMPTY
 	30, // PREY
-	40 // PREDATOR
+	30 // PREDATOR
 };
 
 const int MAX_ENERGY = 10;
 
 const float DYING_RATE[NUMBER_OF_POPULATION_TYPES] = {
 	0, // EMPTY
-	0.01, // PREY
+	0.02, // PREY
 	0.03 // PREDATOR
 };
 
 const float BIRTH_RATE[NUMBER_OF_POPULATION_TYPES] = {
 	0, // EMPTY
-	0.3, // PREY
-	0.15 // PREDATOR
+	0.5, // PREY
+	0.2 // PREDATOR
 };

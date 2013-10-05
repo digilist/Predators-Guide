@@ -4,7 +4,7 @@
 #define MAP_H_INCLUDED
 
 /**
- * Repräsentiert das Spielfeld
+ * represents the map
  *
  */
 struct Map
@@ -18,7 +18,8 @@ struct Map
 };
 
 /**
- * represents a segment of the map
+ * represents a segment of the map, which will be simulated by one process
+ *
  */
 struct Segment {
 	unsigned int x1 : 16;
@@ -30,9 +31,8 @@ struct Segment {
 };
 
 /**
- * die möglichen Feldbelegungen: leeres Feld, Räuber & Beute
+ * die different population types for one field: empty, prey and predator
  *
- * beim Hinzufügen oder Entfernen die Konfiguration in der config.h anpassen!
  */
 enum PopulationType
 {
@@ -42,27 +42,22 @@ enum PopulationType
 	NUMBER_OF_POPULATION_TYPES
 };
 
-/**
- * die Belegung eines Feldes
- *
- */
 struct Field
 {
-	 // Position des Feldes
+	 // coordinates of this field
 	unsigned int x;
 	unsigned int y;
 
 	enum PopulationType population_type;
 
-	int last_step; // speichert, wann das Lebewesen seinen letzten Schritt vollzogen hat (um doppelte Schritte nach Bewegungen zu vermeiden)
+	int last_step; // in which step was the last movement of the animal on this field?
 
-	// wenn populationType == EMPTY muss keines dieser Werte gesetzt werden
-	unsigned int age; // erreicht das Lebewesen ein bestimmtes Alter, bringt es ein neues Lebewesen auf die Welt
+	// the following two values are just for predators and prey
+	unsigned int age;
+	int energy;
 
-	unsigned int energy; // Anzahl der Zeiteinheiten, die das Tier hungern musste
 
-
-	unsigned int contains_plant; // speicher, ob auf diesem Feld auch pflanzen existieren
+	int contains_plant; // boolean, whether there are plants on this field
 
 };
 

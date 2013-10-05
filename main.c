@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 
 	if(rank == 0 && result != 0)
 	{
-		printf("Simulation finished in %d:%.9ds.\n", (int) result->run_time.tv_sec, (int) result->run_time.tv_usec);
+		printf("Simulation finished in %d:%.6ds.\n", (int) result->run_time.tv_sec, (int) result->run_time.tv_usec);
 		save_result(result);
 	}
 

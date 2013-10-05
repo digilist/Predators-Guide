@@ -417,7 +417,7 @@ void probe_recv_field()
 }
 
 /**
- * start a new thread, to receive fields
+ * start a new thread receiving fields
  */
 void start_rcv()
 {
@@ -506,7 +506,7 @@ void _create_mpi_types()
 void _create_mpi_struct_field()
 {
 	struct Field field;
-	MPI_Datatype types[7] = {MPI_UNSIGNED, MPI_UNSIGNED, MPI_INT, MPI_UNSIGNED, MPI_UNSIGNED, MPI_UNSIGNED, MPI_UNSIGNED};
+	MPI_Datatype types[7] = {MPI_UNSIGNED, MPI_UNSIGNED, MPI_INT, MPI_UNSIGNED, MPI_UNSIGNED, MPI_INT, MPI_UNSIGNED};
 	int blocklen[7] = {1, 1, 1, 1, 1, 1, 1};
 	MPI_Aint disp[7] = {
 		_get_offset(&field, &field.x),
