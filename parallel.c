@@ -24,8 +24,8 @@ MPI_Op			MPI_Op_Sum_StepResult;
 int snd = 0;
 int rcv = 0;
 
-struct Field _irecv_field;
-MPI_Request *_ircv_request = 0;
+struct Field *_irecv_field = NULL;
+MPI_Request *_irecv_request = NULL;
 
 void __send_field(struct Field *field, int dest_rank, const char* caller);
 
@@ -349,25 +349,30 @@ int irecv_field()
 	if(get_num_processes() == 1)
 		return 0;
 
-	if(_ircv_request == 0)
+	if(_irecv_request == NULL)
 	{
-		_ircv_request = malloc(sizeof(MPI_Request));
-		MPI_Irecv(&_irecv_field, 1, MPI_Struct_Field, MPI_ANY_SOURCE, FIELD, MPI_COMM_WORLD, _ircv_request);
+		_irecv_field = malloc(sizeof(struct Field));
+		_irecv_request = malloc(sizeof(MPI_Request));
+
+		MPI_Irecv(_irecv_field, 1, MPI_Struct_Field, MPI_ANY_SOURCE, FIELD, MPI_COMM_WORLD, _irecv_request);
 	}
 
 	int received = 0;
 	MPI_Status status;
-	MPI_Request_get_status(*_ircv_request, &received, &status);
+	MPI_Request_get_status(*_irecv_request, &received, &status);
 
 	if(received)
 	{
-		copy_field_to(&_irecv_field, get_field(_irecv_field.x, _irecv_field.y));
+		MPI_Wait(_irecv_request, &status); // ensure message is there
+
+		copy_field_to(_irecv_field, get_field(_irecv_field->x, _irecv_field->y));
 
 		rcv++;
-		output("%d: ireceived %dx%d, border: %d\n", get_rank(), _irecv_field.x, _irecv_field.y, is_border_field(&_irecv_field));
+		output("%d: ireceived %dx%d, border: %d\n", get_rank(), _irecv_field->x, _irecv_field->y, is_border_field(_irecv_field));
 
-		free(_ircv_request);
-		_ircv_request = 0;
+		free(_irecv_request);
+		free(_irecv_field);
+		_irecv_request = NULL;
 
 		// check if there are more messages...
 		return irecv_field() + 1;
@@ -482,14 +487,12 @@ void _create_mpi_struct_step_result()
 void _create_mpi_op_sum_step_results()
 {
 	void sum(struct StepResult *in, struct StepResult *inout, int *len, MPI_Datatype *datatype) {
-		struct StepResult r;
 		for(int i = 0; i < *len; i++, in++, inout++)
 		{
-			r.operations = in->operations + inout->operations;
-			r.amount_predators = in->amount_predators + inout->amount_predators;
-			r.amount_prey = in->amount_prey + inout->amount_prey;
-			r.amount_plants = in->amount_plants + inout->amount_plants;
-			*inout = r;
+			inout->operations += inout->operations;
+			inout->amount_predators += inout->amount_predators;
+			inout->amount_prey += inout->amount_prey;
+			inout->amount_plants += inout->amount_plants;
 		}
 	}
 

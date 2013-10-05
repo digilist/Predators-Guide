@@ -11,6 +11,7 @@
 #include "result.h"
 
 #include "parallel.h"
+#include <mpi.h>
 
 void create_video();
 
@@ -21,6 +22,7 @@ void create_video();
  */
 int main(int argc, char *argv[])
 {
+
 	int rank = init_parallel(argc, argv);
 
 	// init random and inluce the process rank (rank+1, to prevent a 0-result for the root process)

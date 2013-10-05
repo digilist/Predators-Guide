@@ -22,7 +22,7 @@ sync: main.c
 
 valgrind: predators.out
 	make compile
-	$(MPIEXEC) -n $(p) valgrind --tool=memcheck ./predators.out
+	$(MPIEXEC) -n $(p) valgrind --tool=memcheck ./predators.out --leak-check=full --track-origins=yes
 
 plot: predators.out
 	gnuplot pred.plot

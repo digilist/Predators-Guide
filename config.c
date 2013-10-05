@@ -8,10 +8,10 @@ const int PRINTING_ENABLED = 0;
 const char SAVE_PATH[] = "/tmp/pred/"; // Pfad zu Ordner für Bitmap-Erzeugung mit abschließendem /
 const char BITMAP_FILENAME[] = "%d.bmp"; // Dateiname für Bitmap (muss ein %d für die Nummer des Schrittes enthalten)
 
-const int MAP_WIDTH = 300; // Breite der Karte
-const int MAP_HEIGHT = 300; // Höhe der Karte
+const int MAP_WIDTH = 2000; // Breite der Karte
+const int MAP_HEIGHT = 2000; // Höhe der Karte
 const int SCALE_FACTOR = 1; // Skalierungsfaktor für die Bildausgabe
-const int MAX_SIMULATION_STEPS = 100; // Anzahl der Simulationsschritte
+const int MAX_SIMULATION_STEPS = 10; // Anzahl der Simulationsschritte
 
 const float MAP_FILL_RATE = 0.3;
 const float PREDATOR_RATE = 0.5; // an der MAP_FILL_RATE
