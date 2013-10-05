@@ -34,9 +34,6 @@ void recv_field();
 int irecv_field();
 void probe_recv_field();
 
-void start_rcv();
-void terminate_rcv();
-
 void exchange_border_fields();
 
 #endif

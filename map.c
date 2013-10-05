@@ -316,7 +316,7 @@ void _init_population()
 
 	exchange_border_fields();
 
-	printf("%d: Spawned %d Predators / %d Prey / %d Plants / %d Empty\n", get_rank(), counter[PREDATOR], counter[PREY], plants, counter[EMPTY]);
+	output("%d: Spawned %d Predators / %d Prey / %d Plants / %d Empty\n", get_rank(), counter[PREDATOR], counter[PREY], plants, counter[EMPTY]);
 }
 
 /**

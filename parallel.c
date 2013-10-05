@@ -14,8 +14,6 @@
 int _rank = -1;
 int _num_processes;
 
-pthread_t pthread_rcv[NUMBER_OF_RCV_THREADS];
-
 MPI_Status status;
 
 // extern
@@ -26,7 +24,7 @@ MPI_Op			MPI_Op_Sum_StepResult;
 int snd = 0;
 int rcv = 0;
 
-struct Field _ircv_field;
+struct Field _irecv_field;
 MPI_Request *_ircv_request = 0;
 
 void __send_field(struct Field *field, int dest_rank, const char* caller);
@@ -44,20 +42,6 @@ int _get_offset(void* t_struct, void* element);
  */
 int init_parallel(int argc, char *argv[])
 {
-	for(int i = 0; i < NUMBER_OF_RCV_THREADS; i++)
-	{
-		pthread_rcv[i] = 0;
-	}
-
-//	int provided;
-//	MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-//	if(provided < MPI_THREAD_SERIALIZED) // .... multiple doesn't work on cluster ?!
-//	{
-//		printf("MPI just provied Thread Level %d but needed %d\n", provided, MPI_THREAD_MULTIPLE);
-//		finish_parallel();
-//		exit(1);
-//	}
-
 	MPI_Init(&argc, &argv);
 
 	_create_mpi_types();
@@ -98,8 +82,6 @@ int get_num_processes()
  */
 void finish_parallel()
 {
-	terminate_rcv();
-
 	printf("%d: rcv %d snd %d\n", get_rank(), rcv, snd);
 	MPI_Finalize();
 }
@@ -370,7 +352,7 @@ int irecv_field()
 	if(_ircv_request == 0)
 	{
 		_ircv_request = malloc(sizeof(MPI_Request));
-		MPI_Irecv(&_ircv_field, 1, MPI_Struct_Field, MPI_ANY_SOURCE, FIELD, MPI_COMM_WORLD, _ircv_request);
+		MPI_Irecv(&_irecv_field, 1, MPI_Struct_Field, MPI_ANY_SOURCE, FIELD, MPI_COMM_WORLD, _ircv_request);
 	}
 
 	int received = 0;
@@ -379,10 +361,10 @@ int irecv_field()
 
 	if(received)
 	{
-		copy_field_to(&_ircv_field, get_field(_ircv_field.x, _ircv_field.y));
+		copy_field_to(&_irecv_field, get_field(_irecv_field.x, _irecv_field.y));
 
 		rcv++;
-		output("%d: ireceived %dx%d, border: %d\n", get_rank(), _ircv_field.x, _ircv_field.y, is_border_field(&_ircv_field));
+		output("%d: ireceived %dx%d, border: %d\n", get_rank(), _irecv_field.x, _irecv_field.y, is_border_field(&_irecv_field));
 
 		free(_ircv_request);
 		_ircv_request = 0;
@@ -399,52 +381,11 @@ int irecv_field()
  */
 void probe_recv_field()
 {
-	int fails = 0;
-	while(fails < 2)
+	int flag = 0;
+	MPI_Iprobe(MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &flag, &status);
+	if(flag)
 	{
-		int flag = 0;
-		MPI_Iprobe(MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &flag, &status);
-		if(flag)
-		{
-			recv_field();
-			fails = 0;
-		}
-		else
-		{
-			fails++;
-		}
-	}
-}
-
-/**
- * start a new thread receiving fields
- */
-void start_rcv()
-{
-	void* rcv_field_thread() {
-		while(1)
-		{
-			recv_field();
-		}
-		return 0;
-	}
-
-	for(int i = 0; i < NUMBER_OF_RCV_THREADS; i++)
-	{
-		int rc = pthread_create(&pthread_rcv[i], NULL, &rcv_field_thread, 0);
-		if (rc){
-			printf("ERROR; return code from pthread_create() is %d\n", rc);
-			exit(-1);
-		}
-	}
-}
-
-void terminate_rcv()
-{
-	for(int i = 0; i < NUMBER_OF_RCV_THREADS; i++)
-	{
-		if(pthread_rcv[i] != 0)
-			pthread_cancel(pthread_rcv[i]);
+		recv_field();
 	}
 }
 
@@ -525,15 +466,16 @@ void _create_mpi_struct_field()
 void _create_mpi_struct_step_result()
 {
 	struct StepResult step_result;
-	MPI_Datatype types[3] = {MPI_UNSIGNED, MPI_UNSIGNED, MPI_UNSIGNED}; // ignore current_step and *next
-	int blocklen[3] = {1, 1, 1};
-	MPI_Aint disp[3] = {
+	MPI_Datatype types[4] = {MPI_UNSIGNED, MPI_UNSIGNED, MPI_UNSIGNED, MPI_UNSIGNED}; // ignore current_step and *next
+	int blocklen[4] = {1, 1, 1, 1};
+	MPI_Aint disp[4] = {
+		_get_offset(&step_result, &step_result.operations),
 		_get_offset(&step_result, &step_result.amount_predators),
 		_get_offset(&step_result, &step_result.amount_prey),
 		_get_offset(&step_result, &step_result.amount_plants),
 	};
 
-	MPI_Type_create_struct(3, blocklen, disp, types, &MPI_Struct_StepResult);
+	MPI_Type_create_struct(4, blocklen, disp, types, &MPI_Struct_StepResult);
 	MPI_Type_commit(&MPI_Struct_StepResult);
 }
 
@@ -543,6 +485,7 @@ void _create_mpi_op_sum_step_results()
 		struct StepResult r;
 		for(int i = 0; i < *len; i++, in++, inout++)
 		{
+			r.operations = in->operations + inout->operations;
 			r.amount_predators = in->amount_predators + inout->amount_predators;
 			r.amount_prey = in->amount_prey + inout->amount_prey;
 			r.amount_plants = in->amount_plants + inout->amount_plants;

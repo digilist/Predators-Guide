@@ -54,20 +54,11 @@ struct SimulationResult* run_simulation()
 		simulation_step(i);
 
 		died = get_stats(i, &last_result, result);
-		MPI_Barrier(MPI_COMM_WORLD);
 
 		if(num_processes == 1)
 		{
 			print_bitmap(i);
 		}
-
-		// barrier to ensure, simulation continues only when all processes are ready
-		// not needed, because of MPI_Bcast in get_stats() ?!?
-//		MPI_Barrier(MPI_COMM_WORLD);
-
-//		int flag = 0;
-//		MPI_Status status;
-//		MPI_Iprobe(MPI_ANY_SOURCE, FIELD, MPI_COMM_WORLD, &flag, &status);
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);
@@ -76,7 +67,10 @@ struct SimulationResult* run_simulation()
 	{
 		gettimeofday(&result->finish_time, NULL);
 		calc_runtime(result);
+
+		result->operations = i;
 	}
+
 
 	return result;
 }
@@ -128,6 +122,8 @@ int get_stats(int step, struct StepResult **last_result, struct SimulationResult
 			*last_result = (*last_result)->next;
 		}
 		**last_result = step_result;
+
+		result->operations += step_result.operations;
 
 		printf(" - %d predators / %d prey / %d plants\n", step_result.amount_predators, step_result.amount_prey, step_result.amount_plants);
 

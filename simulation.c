@@ -30,12 +30,17 @@ int should_die(struct Field *field);
 struct Field* get_random_empty_neighboring_field(struct Field *field);
 struct Field* get_neighboring_field_in_direction(int x, int y, enum Direction direction);
 
+// operations in this simulation step
+int _operations = 0;
+
 /**
  * simulate a single step
  *
  */
 void simulation_step(int step)
 {
+	_operations =  0;
+
 	struct Segment *segment = get_segment();
 
 	irecv_field();
@@ -132,6 +137,7 @@ struct StepResult* calculate_step_result(int step)
 	resultset->amount_predators = 0;
 	resultset->amount_plants = 0;
 	resultset->current_step = step;
+	resultset->operations = _operations;
 	resultset->next = 0;
 
 	struct Segment *segment = get_segment();

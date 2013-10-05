@@ -41,7 +41,10 @@ int main(int argc, char *argv[])
 
 	if(rank == 0 && result != 0)
 	{
-		printf("Simulation finished in %d:%.6ds.\n", (int) result->run_time.tv_sec, (int) result->run_time.tv_usec);
+		float ops = ((float) result->operations / ((int) result->run_time.tv_sec * 1000000 + (int) result->run_time.tv_usec)) * 1000000;
+
+		printf("Simulation finished.\n");
+		printf("%d Operations has been executed in %d,%.6ds, which results in %.2f Op/s\n", result->operations, (int) result->run_time.tv_sec, (int) result->run_time.tv_usec, ops);
 		save_result(result);
 	}
 
