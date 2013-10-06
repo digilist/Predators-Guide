@@ -18,7 +18,7 @@ mpi: predators.out
 	$(MPIEXEC) -n $(p) ./predators.out
 
 sync: main.c
-	rsync --delete -avze 'ssh' . wr:predators-guide/
+	rsync -avze 'ssh' . wr:predators-guide/
 
 valgrind: predators.out
 	make compile

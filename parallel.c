@@ -471,7 +471,7 @@ void _create_mpi_struct_field()
 void _create_mpi_struct_step_result()
 {
 	struct StepResult step_result;
-	MPI_Datatype types[4] = {MPI_UNSIGNED, MPI_UNSIGNED, MPI_UNSIGNED, MPI_UNSIGNED}; // ignore current_step and *next
+	MPI_Datatype types[4] = {MPI_UNSIGNED_LONG, MPI_UNSIGNED, MPI_UNSIGNED, MPI_UNSIGNED}; // ignore current_step and *next
 	int blocklen[4] = {1, 1, 1, 1};
 	MPI_Aint disp[4] = {
 		_get_offset(&step_result, &step_result.operations),
@@ -489,10 +489,10 @@ void _create_mpi_op_sum_step_results()
 	void sum(struct StepResult *in, struct StepResult *inout, int *len, MPI_Datatype *datatype) {
 		for(int i = 0; i < *len; i++, in++, inout++)
 		{
-			inout->operations += inout->operations;
-			inout->amount_predators += inout->amount_predators;
-			inout->amount_prey += inout->amount_prey;
-			inout->amount_plants += inout->amount_plants;
+			inout->operations += in->operations;
+			inout->amount_predators += in->amount_predators;
+			inout->amount_prey += in->amount_prey;
+			inout->amount_plants += in->amount_plants;
 		}
 	}
 

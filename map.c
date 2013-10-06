@@ -164,7 +164,6 @@ void _init_segment()
 		// but only if this process simulates a segment in the last column
 		if(rank % _cols == 0)
 		{
-			printf("asdfa %d\n", get_rank());
 			int diff = map->width - _cols * segment_width;
 
 			_segment->width += diff;

@@ -22,12 +22,10 @@ void create_video();
  */
 int main(int argc, char *argv[])
 {
-
 	int rank = init_parallel(argc, argv);
 
-	// init random and inluce the process rank (rank+1, to prevent a 0-result for the root process)
+	// init random and incluce the process rank (rank+1, to prevent a multiplication result of 0 for the root process)
 	srand((unsigned) time(0) * (rank + 1));
-//	srand((unsigned) rank);
 
 	if(rank == 0)
 	{
@@ -43,10 +41,10 @@ int main(int argc, char *argv[])
 
 	if(rank == 0 && result != 0)
 	{
-		float ops = ((float) result->operations / ((int) result->run_time.tv_sec * 1000000 + (int) result->run_time.tv_usec)) * 1000000;
+		double ops = ((double) result->operations / ((int) result->run_time.tv_sec * 1000000 + (int) result->run_time.tv_usec)) * 1000000;
 
 		printf("Simulation finished.\n");
-		printf("%d Operations has been executed in %d,%.6ds, which results in %.2f Op/s\n", result->operations, (int) result->run_time.tv_sec, (int) result->run_time.tv_usec, ops);
+		printf("%lu Operations has been executed in %d.%.6ds , which results in %.2f Op/s\n", result->operations, (int) result->run_time.tv_sec, (int) result->run_time.tv_usec, ops);
 		save_result(result);
 	}
 

@@ -3,20 +3,20 @@
 #include "parallel.h"
 
 int DEBUG = 0;
-const int PRINTING_ENABLED = 0;
+const int PRINTING_ENABLED = 1;
 
-const char SAVE_PATH[] = "/tmp/pred/"; // Pfad zu Ordner für Bitmap-Erzeugung mit abschließendem /
-const char BITMAP_FILENAME[] = "%d.bmp"; // Dateiname für Bitmap (muss ein %d für die Nummer des Schrittes enthalten)
+const char SAVE_PATH[] = "/tmp/pred/"; // path to the folder, which will contain the images
+const char BITMAP_FILENAME[] = "%d.bmp"; // filename for a single bitmap, must contain a %d for the number of the simulation step
 
-const int MAP_WIDTH = 2000; // Breite der Karte
-const int MAP_HEIGHT = 2000; // Höhe der Karte
-const int SCALE_FACTOR = 1; // Skalierungsfaktor für die Bildausgabe
-const int MAX_SIMULATION_STEPS = 10; // Anzahl der Simulationsschritte
+const int MAP_WIDTH = 1000; // width of the map
+const int MAP_HEIGHT = 100; // height of the map
+const int SCALE_FACTOR = 1; // to scale the bitmap
+const int MAX_SIMULATION_STEPS = 200; // maximum number of simulation steps
 
-const float MAP_FILL_RATE = 0.3;
-const float PREDATOR_RATE = 0.5; // an der MAP_FILL_RATE
-const float PREY_RATE = 0.5; // an der MAP_FILL_RATE
-const float PLANT_RATE = 0.1; // an der Gesamtmap
+const float MAP_FILL_RATE = 0.3; // for Predators and Prey
+const float PREDATOR_RATE = 0.5; // of MAP_FILL_RATE
+const float PREY_RATE = 0.5; // of MAP_FILL_RATE
+const float PLANT_RATE = 0.1; // spawn rate, unrelated to MAP_FILL_RATE
 
 const int ELDERLY_AGE[NUMBER_OF_POPULATION_TYPES] = {
 	0, // EMPTY

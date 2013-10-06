@@ -37,7 +37,7 @@ void init_filesystem()
 {
 	char buffer[256];
 
-	sprintf(buffer, "rm -rf %s*", SAVE_PATH);
+	sprintf(buffer, "rm -f %s/steps.csv", SAVE_PATH);
 	system(buffer);
 
 	sprintf(buffer, "mkdir -p %s", SAVE_PATH);

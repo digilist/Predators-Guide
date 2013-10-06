@@ -1,17 +1,8 @@
 #!/bin/sh
-	
-# Time limit is one minute.
-# See "man sbatch" for other time formats.
-#SBATCH --time=1
 
-# Run 10 tasks on 2 nodes.
-#SBATCH -N 2 -n 10
-
-# Output goes to job.out, error messages to job.err.
-#SBATCH --error=job.err --output=job.out
-
-# at first compile it, to ensure there is a valid version
-make compile
+#SBATCH --time=10
+#SBATCH -N 1 -n 1
+#SBATCH --error=output/job_1_1.err --output=output/job_1_1.out
 
 srun hostname
 mpiexec ./predators.out

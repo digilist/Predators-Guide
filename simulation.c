@@ -31,7 +31,7 @@ struct Field* get_random_empty_neighboring_field(struct Field *field);
 struct Field* get_neighboring_field_in_direction(int x, int y, enum Direction direction);
 
 // operations in this simulation step
-int _operations = 0;
+unsigned long _operations = 0;
 
 /**
  * simulate a single step
@@ -51,6 +51,8 @@ void simulation_step(int step)
 
 	for (int i = 0; i < fields; i++)
 	{
+		_operations++;
+
 		struct Field *field = movements[i];
 
 		if(is_near_border(field))
@@ -66,6 +68,8 @@ void simulation_step(int step)
 	get_movement_order(movements, fields);
 	for (int i = 0; i < fields; i++)
 	{
+		_operations++;
+
 		struct Field *field = movements[i];
 
 		if(is_near_border(field))

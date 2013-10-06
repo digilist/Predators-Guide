@@ -25,6 +25,7 @@ struct SimulationResult* run_simulation()
 	if(rank == 0)
 	{
 		result = malloc(sizeof(struct SimulationResult));
+		result->operations = 0;
 
 		// set start time
 		gettimeofday(&result->start_time, NULL);
@@ -67,8 +68,6 @@ struct SimulationResult* run_simulation()
 	{
 		gettimeofday(&result->finish_time, NULL);
 		calc_runtime(result);
-
-		result->operations = i;
 	}
 
 
