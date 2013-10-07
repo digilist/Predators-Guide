@@ -19,7 +19,4 @@ EOF
 
 echo "$slurm" > mpi.slurm
 
-touch output/job_${N}_${n}.out
-
-make compile
 sbatch mpi.slurm

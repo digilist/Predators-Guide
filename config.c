@@ -8,8 +8,9 @@ const int PRINTING_ENABLED = 1;
 const char SAVE_PATH[] = "/tmp/pred/"; // path to the folder, which will contain the images
 const char BITMAP_FILENAME[] = "%d.bmp"; // filename for a single bitmap, must contain a %d for the number of the simulation step
 
-const int MAP_WIDTH = 1000; // width of the map
-const int MAP_HEIGHT = 100; // height of the map
+const int WEAK_SCALING = 0; // weak scaling for the parallelization?
+const int MAP_WIDTH = 500; // width of the map
+const int MAP_HEIGHT = 500; // height of the map
 const int SCALE_FACTOR = 1; // to scale the bitmap
 const int MAX_SIMULATION_STEPS = 200; // maximum number of simulation steps
 

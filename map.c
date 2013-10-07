@@ -143,6 +143,12 @@ void _init_segment()
 
 	_fields = _cols * _rows;
 
+	if(WEAK_SCALING)
+	{
+		map->width *= _cols;
+		map->height *= _rows;
+	}
+
 	int segment_width = map->width / _cols;
 	int segment_height = map->height / _rows;
 
