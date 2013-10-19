@@ -1,4 +1,4 @@
 Predators-Guide
 ===============
 
-Predators-Guide is a simulation describing the dynamics of biological systems in which two species (Predators and Prey) interact.
+This project aims to show the consequences resulting from a simulation of prey and predator in a virtual world. By altering one or many of the key parameters, the behavior of the animals is controlled and different outcomes can be observed. Outcome does not necessarily mean a final state of the world in which the simulation eventually runs into but rather the state of the world after a pre-defined number of rounds. It is possible for the simulation to reach a dead-end before completing the set number of rounds. This can happen, for instance, if one population dies from starvation or one eats the other. The final program is able to visualize the results and show appropriate data about the actions leading up to the results. Furthermore, it can be run simultaneously on multiple cores in order to improve performance. The project is written mainly in the programming language C. The parallelization and communication between the processes is based on OpenMPI.
